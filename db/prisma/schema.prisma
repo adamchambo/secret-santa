@@ -1,0 +1,148 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id  String  @db.Uuid  @id 
+  displayName String? 
+  email String @unique
+  icon String? 
+
+  giftOptions GiftOption[]
+  preferences Preference?
+  settings  Settings?
+  groupMemberships GroupMember[]
+}
+
+model GiftOption {
+  id  String @db.Uuid  @id  @default(uuid()) 
+  userId  String @db.Uuid
+  user User @relation(fields: [userId], references: [id])
+  priority Int 
+  name String 
+  productUrl String? 
+  takenByUser Boolean
+
+  @@unique([userId, priority])
+  @@unique([userId, name])
+  @@unique([userId, productUrl])
+
+  @@index(userId)
+}
+
+model Preference {
+  id  String  @db.Uuid @id  @default(uuid()) 
+  userId  String @db.Uuid @unique
+  user  User  @relation(fields: [userId], references: [id])
+  dietary String? 
+  clothingSize  String? 
+  notes String? 
+}
+
+model Settings {
+  id  String  @db.Uuid  @id @default(uuid()) 
+  userId  String @db.Uuid @unique 
+  user  User  @relation(fields: [userId], references: [id])
+  language  Language  @default(EN)
+  theme Theme  @default(LIGHT)
+  currency  Currency  @default(AUD)
+}
+
+model Group {
+  id  String  @db.Uuid  @id @default(uuid())
+  adminId String @db.Uuid 
+  admin User  @relation(fields: [adminId], references: [id])
+  groupMembers  GroupMember[]
+  chatId String @db.Uuid @unique
+  chat Chat @relation(fields: [chatId], references: [id])
+  isLocked  Boolean @default(false)
+  createdAt DateTime  @default(now())
+  inviteCode Int  @unique
+}
+
+model GroupMember {
+  id  String @db.Uuid  @id  @default(uuid())
+  userId  String  @db.Uuid
+  user User @relation(fields: [userId], references: [id])
+  groupId String  @db.Uuid
+  group Group @relation(fields: [groupId], references: [id])
+  familyId  String?  @db.Uuid
+  family  Family?  @relation(fields: [familyId], references: [id])
+  joinedAt DateTime @default(now())
+
+  @@unique([userId, groupId])
+}
+
+model Family {
+  id  String  @db.Uuid  @id @default(uuid())
+  groupId String  @db.Uuid
+  group Group @relation(fields: [groupId], references: [id])
+  name  String 
+
+  @@unique([groupId, name])
+
+  @@index([groupId])
+}
+
+model Match {
+  id  String  @db.Uuid  @id @default(uuid())
+  groupId String  @db.Uuid
+  group Group @relation(fields: [groupId], references: [id])
+  givingUserId  String  @db.Uuid
+  givingUser User @relation("GivingUser", fields: [givingUserId], references: [id])
+  receivingUserId String  @db.Uuid
+  receivingUser User  @relation("ReceivingUser", fields: [receivingUserId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([givingUserId, groupId])
+  @@unique([receivingUserId, groupId])
+}
+
+model Chat {
+  id  String  @db.Uuid  @id @default(uuid())
+  groupId String @db.Uuid @unique
+  group Group @relation(fields: [groupId], references: [id])
+}
+
+model Message {
+  id  String  @db.Uuid  @id @default(uuid())
+  chatId  String  @db.Uuid
+  chat Chat @relation(fields: [chatId], references: [id])
+  senderUserId  String  @db.Uuid
+  senderUser  User  @relation(fields: [senderUserId], references: [id])
+  content String @db.VarChar(2000)
+  createdAt DateTime @default(now())
+  editedAt  Datetime @updatedAt
+}
+
+enum Theme {
+  LIGHT
+  DARK
+}
+
+enum Language {
+  EN
+  ES
+  FR
+}
+
+enum Currency {
+  AUD
+  USD
+  EUR
+  GBP
+}
+
+
+
+
