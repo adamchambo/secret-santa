@@ -22,6 +22,11 @@ model User {
   preferences Preference?
   settings  Settings?
   groupMemberships GroupMember[]
+  adminGroups Group[]
+  sentMessages Message[]
+
+  givingMatches Match[] @relation("GivingUser")
+  receivingMatches Match[] @relation("ReceivingUser")
 }
 
 model GiftOption {
@@ -63,11 +68,15 @@ model Group {
   adminId String @db.Uuid 
   admin User  @relation(fields: [adminId], references: [id])
   groupMembers  GroupMember[]
-  chatId String @db.Uuid @unique
-  chat Chat @relation(fields: [chatId], references: [id])
+  chat Chat?
   isLocked  Boolean @default(false)
   createdAt DateTime  @default(now())
   inviteCode Int  @unique
+
+  families Family[]
+  matches Match[]
+
+  @@index([adminId])
 }
 
 model GroupMember {
@@ -88,6 +97,8 @@ model Family {
   groupId String  @db.Uuid
   group Group @relation(fields: [groupId], references: [id])
   name  String 
+
+  familyMembers GroupMember[]
 
   @@unique([groupId, name])
 
@@ -112,6 +123,8 @@ model Chat {
   id  String  @db.Uuid  @id @default(uuid())
   groupId String @db.Uuid @unique
   group Group @relation(fields: [groupId], references: [id])
+
+  messages Message[]
 }
 
 model Message {
@@ -122,7 +135,9 @@ model Message {
   senderUser  User  @relation(fields: [senderUserId], references: [id])
   content String @db.VarChar(2000)
   createdAt DateTime @default(now())
-  editedAt  Datetime @updatedAt
+  editedAt  DateTime @updatedAt
+
+  @@index([chatId])
 }
 
 enum Theme {
