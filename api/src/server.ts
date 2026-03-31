@@ -22,6 +22,6 @@ app.use(errorHandler);
 const URL = process.env.API_BASE_URL || "http://localhost";
 const PORT = process.env.PORT || 5000; 
 
-app.listen(process.env.PORT, () => {
+app.listen(PORT, () => {
   console.log(`Server listening on port: ${URL}:${PORT}`)
 });
