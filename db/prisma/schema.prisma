@@ -32,7 +32,7 @@ model User {
 model GiftOption {
   id  String @db.Uuid  @id  @default(uuid()) 
   userId  String @db.Uuid
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   priority Int 
   name String 
   productUrl String? 
@@ -48,7 +48,7 @@ model GiftOption {
 model Preference {
   id  String  @db.Uuid @id  @default(uuid()) 
   userId  String @db.Uuid @unique
-  user  User  @relation(fields: [userId], references: [id])
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   dietary String? 
   clothingSize  String? 
   notes String? 
@@ -57,7 +57,7 @@ model Preference {
 model Settings {
   id  String  @db.Uuid  @id @default(uuid()) 
   userId  String @db.Uuid @unique 
-  user  User  @relation(fields: [userId], references: [id])
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   language  Language  @default(EN)
   theme Theme  @default(LIGHT)
   currency  Currency  @default(AUD)
@@ -87,7 +87,7 @@ model GroupMember {
   userId  String  @db.Uuid
   user User @relation(fields: [userId], references: [id])
   groupId String  @db.Uuid
-  group Group @relation(fields: [groupId], references: [id])
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
   familyId  String?  @db.Uuid
   family  Family?  @relation(fields: [familyId], references: [id])
   joinedAt DateTime @default(now())
@@ -98,7 +98,7 @@ model GroupMember {
 model Family {
   id  String  @db.Uuid  @id @default(uuid())
   groupId String  @db.Uuid
-  group Group @relation(fields: [groupId], references: [id])
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
   name  String 
 
   familyMembers GroupMember[]
@@ -111,7 +111,7 @@ model Family {
 model Match {
   id  String  @db.Uuid  @id @default(uuid())
   groupId String  @db.Uuid
-  group Group @relation(fields: [groupId], references: [id])
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
   givingUserId  String  @db.Uuid
   givingUser User @relation("GivingUser", fields: [givingUserId], references: [id])
   receivingUserId String  @db.Uuid
@@ -125,7 +125,7 @@ model Match {
 model Chat {
   id  String  @db.Uuid  @id @default(uuid())
   groupId String @db.Uuid @unique
-  group Group @relation(fields: [groupId], references: [id])
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   messages Message[]
 }
@@ -133,7 +133,7 @@ model Chat {
 model Message {
   id  String  @db.Uuid  @id @default(uuid())
   chatId  String  @db.Uuid
-  chat Chat @relation(fields: [chatId], references: [id])
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
   senderUserId  String  @db.Uuid
   senderUser  User  @relation(fields: [senderUserId], references: [id])
   content String @db.VarChar(2000)
