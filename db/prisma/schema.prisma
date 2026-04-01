@@ -65,6 +65,8 @@ model Settings {
 
 model Group {
   id  String  @db.Uuid  @id @default(uuid())
+  name  String
+  eventDate DateTime? 
   adminId String @db.Uuid 
   admin User  @relation(fields: [adminId], references: [id])
   groupMembers  GroupMember[]
