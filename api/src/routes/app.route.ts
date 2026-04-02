@@ -4,6 +4,7 @@ import { groupRouter } from "./group.route.js";
 
 const appRouter = Router(); 
 
+/* ---------------- APP ROUTES ---------------- */
 appRouter.use("/users", userRouter);
 appRouter.use("/groups", groupRouter); 
 

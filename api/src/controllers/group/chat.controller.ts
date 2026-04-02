@@ -1,5 +1,5 @@
-import { Request, Response } from "express";
+// import { Request, Response } from "express";
 
-export function getChatByGroupId(req: Request, res: Response) {
+// export function getChatByGroupId(req: Request, res: Response) {
 
-}
+// }

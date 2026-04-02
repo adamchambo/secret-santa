@@ -4,7 +4,11 @@ export function getFamiliesByGroupId(req: Request, res: Response) {
 
 }
 
-export function upsertFamilyById(req: Request, res: Response) {
+export function createFamilyByGroupId(req: Request, res: Response) {
+  
+}
+
+export function updateFamilyById(req: Request, res: Response) {
   
 }
 

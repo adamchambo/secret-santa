@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { createUser, deleteUser, getUserById, updateUser } from "../controllers/user/user.controller.js";
-import { createGiftOption, deleteGiftOptionById, getGiftOptionById, getGiftOptionsByUserId, updateGiftOptionById } from "../controllers/user/gift.controller.js";
+import { createGiftOption, deleteGiftOptionById, getGiftOptionById, getGiftOptionsByUserId, updateGiftOptionById } from "../controllers/user/gift-option.controller.js";
 import { getPreferencesByUserId, upsertPreferencesByUserId } from "../controllers/user/preference.controller.js";
 import { getSettingsByUserId, upsertSettingsByUserId } from "../controllers/user/settings.controller.js";
 

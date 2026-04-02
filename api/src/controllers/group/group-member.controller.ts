@@ -8,6 +8,10 @@ export function createGroupMemberByGroupId(req: Request, res: Response) {
   
 }
 
+export function updateGroupMemberByGroupId(req: Request, res: Response) {
+  
+}
+
 export function deleteGroupMemberById(req: Request, res: Response) {
   
 }

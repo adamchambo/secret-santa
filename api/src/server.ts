@@ -9,6 +9,7 @@ import appRouter from "./routes/app.route.js";
 
 const app = express(); 
 
+/* ---------------- MIDDLEWARE ---------------- */
 app.use(secure); 
 app.use(logger); 
 app.use(cors()); 
@@ -17,8 +18,9 @@ app.use(urlencoded({ extended: true }));
 
 app.use('/api', appRouter); 
 app.use(notfoundHandler);
-app.use(errorHandler); 
+app.use(errorHandler);
 
+/* ---------------- SERVER ---------------- */
 const URL = process.env.API_BASE_URL || "http://localhost";
 const PORT = process.env.PORT || 5000; 
 
