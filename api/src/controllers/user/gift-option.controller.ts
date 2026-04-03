@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 
-export function getGiftOptionsByUserId(req: Request, res: Response) {
+export function getGiftOptions(req: Request, res: Response) {
   
 }
 
-export function getGiftOptionById(req: Request, res: Response) {
+export function getGiftOption(req: Request, res: Response) {
   
 }
 
@@ -12,11 +12,11 @@ export function createGiftOption(req: Request, res: Response) {
   
 }
 
-export function updateGiftOptionById(req: Request, res: Response) {
+export function updateGiftOption(req: Request, res: Response) {
   
 }
 
-export function deleteGiftOptionById(req: Request, res: Response) {
+export function deleteGiftOption(req: Request, res: Response) {
   
 }
 

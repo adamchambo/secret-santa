@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
 
-export function getMatchesByGroupId(req: Request, res: Response) {
+export function getMatches(req: Request, res: Response) {
 
 }
 
-export function createMatchesByGroupId(req: Request, res: Response) {
+export function createMatches(req: Request, res: Response) {
   
 }
 
-export function deleteMatchesById(req: Request, res: Response) {
+export function deleteMatches(req: Request, res: Response) {
   
 }

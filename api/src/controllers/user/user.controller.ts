@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 
-export function getUserById(req: Request, res: Response) {
+export function getUser(req: Request, res: Response) {
   
 }
 

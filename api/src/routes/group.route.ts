@@ -1,18 +1,18 @@
 import { Router } from "express";
-import { createGroup, deleteGroupById, getGroupById, getGroupsByUserId, updateGroupById } from "../controllers/group/group.controller.js";
-import { createGroupMemberByGroupId, deleteGroupMemberById, getGroupMembersByGroupId, updateGroupMemberByGroupId } from "../controllers/group/group-member.controller.js";
-import { createFamilyByGroupId, deleteFamilyById, getFamiliesByGroupId, updateFamilyById} from "../controllers/group/family.controller.js";
-import { createMatchesByGroupId, deleteMatchesById, getMatchesByGroupId } from "../controllers/group/match.controller.js";
-import { createMessageByGroupId, deleteMessageById, editMessageById, getMessagesByGroupId } from "../controllers/group/message.controller.js";
+import { createGroup, deleteGroup, getGroup, getGroups, updateGroup } from "../controllers/group/group.controller.js";
+import { createGroupMember, deleteGroupMember, getGroupMembers, updateGroupMember } from "../controllers/group/group-member.controller.js";
+import { createFamily, deleteFamily, getFamilies, updateFamily } from "../controllers/group/family.controller.js";
+import { createMatches, deleteMatches, getMatches } from "../controllers/group/match.controller.js";
+import { createMessage, deleteMessage, editMessage, getMessages } from "../controllers/group/message.controller.js";
 
 export const groupRouter = Router(); 
 
 /* ---------------- GROUP ROUTES ---------------- */
-groupRouter.get('/', getGroupsByUserId); // use query param
-groupRouter.get('/:groupId', getGroupById); 
+groupRouter.get('/', getGroups); // use query param
+groupRouter.get('/:groupId', getGroup); 
 groupRouter.post('/', createGroup); 
-groupRouter.put('/:groupId', updateGroupById);
-groupRouter.delete('/:groupId', deleteGroupById)
+groupRouter.put('/:groupId', updateGroup);
+groupRouter.delete('/:groupId', deleteGroup)
 
 /* ---------------- CHILD ROUTERS ---------------- */
 const memberRouter = Router({ mergeParams: true });
@@ -21,27 +21,27 @@ const matchRouter = Router({ mergeParams: true });
 const messageRouter = Router({ mergeParams: true }); 
 
 /* ---------------- GROUP MEMBER ROUTES ---------------- */
-memberRouter.get('/', getGroupMembersByGroupId);
-memberRouter.post('/', createGroupMemberByGroupId);
-memberRouter.put('/:memberId', updateGroupMemberByGroupId);  
-memberRouter.delete('/:memberId', deleteGroupMemberById); 
+memberRouter.get('/', getGroupMembers);
+memberRouter.post('/', createGroupMember);
+memberRouter.put('/:memberId', updateGroupMember);  
+memberRouter.delete('/:memberId', deleteGroupMember); 
 
 /* ---------------- FAMILY ROUTES ---------------- */
-familyRouter.get('/', getFamiliesByGroupId);
-familyRouter.post('/', createFamilyByGroupId);
-familyRouter.put('/:familyId', updateFamilyById);
-familyRouter.delete('/:familyId', deleteFamilyById);
+familyRouter.get('/', getFamilies);
+familyRouter.post('/', createFamily);
+familyRouter.put('/:familyId', updateFamily);
+familyRouter.delete('/:familyId', deleteFamily);
 
 /* ---------------- MATCH ROUTES ---------------- */
-matchRouter.get('/', getMatchesByGroupId);
-matchRouter.post('/', createMatchesByGroupId); 
-matchRouter.delete('/:matchId', deleteMatchesById); 
+matchRouter.get('/', getMatches);
+matchRouter.post('/', createMatches); 
+matchRouter.delete('/:matchId', deleteMatches); 
 
 /* ---------------- MESSAGE ROUTES ---------------- */
-messageRouter.get('/', getMessagesByGroupId);
-messageRouter.post('/', createMessageByGroupId); 
-messageRouter.put('/:messageId', editMessageById);
-messageRouter.delete('/:messageId', deleteMessageById);
+messageRouter.get('/', getMessages);
+messageRouter.post('/', createMessage); 
+messageRouter.put('/:messageId', editMessage);
+messageRouter.delete('/:messageId', deleteMessage);
 
 /* ---------------- MOUNT CHILD ROUTERS ---------------- */
 groupRouter.use('/:groupId/members', memberRouter); 
