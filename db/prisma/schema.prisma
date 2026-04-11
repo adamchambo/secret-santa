@@ -73,7 +73,7 @@ model Group {
   chat Chat?
   isLocked  Boolean @default(false)
   createdAt DateTime  @default(now())
-  inviteCode Int  @unique
+  inviteCode String  @unique
   inviteExpiresAt DateTime? 
 
   families Family[]
