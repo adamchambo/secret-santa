@@ -1,17 +1,22 @@
 import { Router } from "express";
-import { createUser, deleteUser, getUser, updateUser } from "../controllers/user/user.controller.js";
-import { createGiftOption, deleteGiftOption, getGiftOption, getGiftOptions, updateGiftOption } from "../controllers/user/gift-option.controller.js";
-import { getPreferences, upsertPreferences } from "../controllers/user/preference.controller.js";
-import { getSettings, upsertSettings } from "../controllers/user/settings.controller.js";
-import { requireAuth } from "@/middleware/auth.middleware.js";
+import { createUser, deleteUser, getUser, updateUser } from "@/controllers/user/user.controller.js";
+import { createGiftOption, deleteGiftOption, getGiftOption, getGiftOptions, updateGiftOption } from "@/controllers/user/gift-option.controller.js";
+import { getPreferences, upsertPreferences } from "@/controllers/user/preference.controller.js";
+import { getSettings, upsertSettings } from "@/controllers/user/settings.controller.js";
+import { requireAuth, requireOwner, requireResourceOwner } from "@/middleware/auth.middleware.js";
+import { findGiftOptionById } from "@/services/user/gift-option.service.js";
 
 export const userRouter = Router();
 
 /* ---------------- USER ROUTERS ---------------- */
-userRouter.get('/:userId', requireAuth, getUser);
-userRouter.post('/', createUser); 
-userRouter.put('/:userId', requireAuth, updateUser)
-userRouter.delete('/:userId', requireAuth, deleteUser); 
+/* public */
+userRouter.post('/', createUser);
+/* auth */
+userRouter.use('/:userId', requireAuth, requireOwner)
+/* protected */
+userRouter.get('/:userId', getUser);
+userRouter.put('/:userId', updateUser)
+userRouter.delete('/:userId', deleteUser); 
 
 /* ---------------- CHILD ROUTERS ---------------- */
 const giftRouter = Router({ mergeParams: true });
@@ -22,8 +27,8 @@ const settingsRouter = Router( { mergeParams: true });
 giftRouter.get('/', getGiftOptions); 
 giftRouter.get('/:giftOptionId', getGiftOption);
 giftRouter.post('/', createGiftOption); 
-giftRouter.put('/:giftOptionId', updateGiftOption);
-giftRouter.delete('/:giftOptionId', deleteGiftOption); 
+giftRouter.put('/:giftOptionId', requireResourceOwner(findGiftOptionById, "giftOptionId"), updateGiftOption);
+giftRouter.delete('/:giftOptionId', requireResourceOwner(findGiftOptionById, "giftOptionId"), deleteGiftOption); 
 
 /* ---------------- PREFERENCE ROUTES ---------------- */
 preferenceRouter.get('/', getPreferences); 

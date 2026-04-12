@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { jwtVerify, createRemoteJWKSet, JWTPayload } from "jose";
 import "dotenv"; 
+import { findGroupMemberByUserId } from "@/services/group/group-member.service.js";
 
 declare global {
   namespace Express {
@@ -44,6 +45,20 @@ export function requireResourceOwner(getResource: (id: string) => Promise<{ user
     if (!resource) return res.status(404).json({ error: "Not found" });
     if (resource.userId !== req.user?.sub) return res.status(403).json({ error: "Forbidden" });
     next();
+  }
+}
+
+/* ---------------- GROUP-MEMBER BOUNDARY ---------------- */
+export async function requireGroupMember(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = req.user?.sub; 
+    const groupId = req.params.groupId; 
+    if (!userId || !groupId || typeof groupId !== "string") return res.status(403).json({ error: "Forbidden" });
+    const member = await findGroupMemberByUserId(userId, groupId); 
+    if (!member) return res.status(403).json({ error: "Not a group member"} );
+    next(); 
+  } catch (err) {
+    next(err); 
   }
 }
 

@@ -1,6 +1,5 @@
 /* ---------------- REQUEST DTOS ---------------- */
 export type CreateMessageDto = {
-  senderUserId: string;
   content: string;
 }
 

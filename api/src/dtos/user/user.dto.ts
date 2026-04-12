@@ -2,6 +2,7 @@
 export type CreateUserDto = {
   displayName?: string;
   email: string;
+  password: string; 
   icon?: string
 }
 
