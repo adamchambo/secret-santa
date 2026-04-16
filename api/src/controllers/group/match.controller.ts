@@ -1,13 +1,35 @@
-import { Request, Response } from "express";
+import { createMatchesByGroupId, deleteMatchesByGroupId, findMatchesByGroupId } from "@/services/group/match.service.js";
+import { NextFunction, Request, Response } from "express";
 
-export function getMatches(req: Request, res: Response) {
-
+export async function getMatches(req: Request, res: Response, next: NextFunction) {
+  try {
+    const groupId = req.params.groupId;
+    if (!groupId || typeof groupId !== "string") return res.status(404).json({ error: "Request doesn't have a valid group id" });
+    const matches = findMatchesByGroupId(groupId);
+    return res.json(matches);
+  } catch (err) {
+    next(err);
+  }
 }
 
-export function createMatches(req: Request, res: Response) {
-  
+export async function createMatches(req: Request, res: Response, next: NextFunction) {
+  try {
+    const groupId = req.params.groupId;
+    if (!groupId || typeof groupId !== "string") return res.status(404).json({ error: "Request doesn't have a valid group id" });
+    const matches = await createMatchesByGroupId(groupId);
+    return res.status(201).json(matches);
+  } catch (err) {
+    next(err);
+  }
 }
 
-export function deleteMatches(req: Request, res: Response) {
-  
+export async function deleteMatches(req: Request, res: Response, next: NextFunction) {
+  try {
+    const groupId = req.params.groupId;
+    if (!groupId || typeof groupId !== "string") return res.status(404).json({ error: "Request doesn't have a valid group id" });
+    await deleteMatchesByGroupId(groupId);
+    return res.status(204).json(groupId);
+  } catch (err) {
+    next(err);
+  }
 }

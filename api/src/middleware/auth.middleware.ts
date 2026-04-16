@@ -6,7 +6,7 @@ import { findGroupMemberByUserId } from "@/services/group/group-member.service.j
 declare global {
   namespace Express {
     interface Request {
-      user?: JWTPayload
+      user?: { sub: string };
     }
   }
 }
@@ -22,7 +22,8 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   if (!token) return res.status(401).json({error: "Missing authorisation token"});
   try {
     const { payload } = await jwtVerify(token, JWKS);
-    req.user = payload;
+    if (!payload.sub) return res.status(401).json({ error: "Invalid token" }); 
+    req.user = { sub: payload.sub };
     next(); 
   } catch {
     return res.status(401).json({ error: "Invalid or expired token" });

@@ -3,7 +3,7 @@ export type CreateGroupMemberDto = {
   userId: string;
 }
 
-export type UpdateMemberDto = {
+export type UpdateGroupMemberDto = {
   familyId?: string;
   
 }

@@ -4,27 +4,19 @@ import { Prisma } from "@db/generated/prisma/client.js";
 import { nanoid } from "nanoid";
 
 export async function findGroupsByUserId(userId: string) {
-  try {
-    return await db.group.findMany({
-      where: {
-        groupMembers: {
-          some: { userId }
-        }
+  return await db.group.findMany({
+    where: {
+      groupMembers: {
+        some: { userId }
       }
-    })
-  } catch (err) {
-    throw new Error("Failed to find groups for group member", { cause: err }); 
-  }
+    }
+  })
 }
 
 export async function findGroupById(id: string) {
-  try {
-    return await db.group.findUniqueOrThrow({
+  return await db.group.findUniqueOrThrow({
       where: { id }
     })
-  } catch (err) {
-    throw new Error("Failed to find group", { cause: err }); 
-  }
 }
 
 export async function createGroup(userId: string, data: CreateGroupDto) {
@@ -51,22 +43,14 @@ export async function createGroup(userId: string, data: CreateGroupDto) {
 }
 
 export async function updateGroupById(id: string, data: UpdateGroupDto) {
-  try {
-    return await db.group.update({
-      where: { id },
-      data
-    });
-  } catch (err) {
-    throw new Error("Failed to update group", { cause: err }); 
-  }
+  return await db.group.update({
+    where: { id },
+    data
+  });
 }
 
 export async function deleteGroupById(id: string) {
-  try {
-    return await db.group.delete({
+  return await db.group.delete({
       where: { id }
     });
-  } catch (err) {
-    throw new Error("Failed to delete group", { cause: err }); 
-  }
 }

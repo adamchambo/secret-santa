@@ -3,53 +3,34 @@ import { db } from "@/clients/prisma.js";
 import { Prisma } from "@db/generated/prisma/client.js";
 
 export async function findGiftOptionsByUserId(userId: string) {
-  try {
-    return await db.giftOption.findMany({ where: { userId } }); 
-  } catch (err) {
-    throw new Error("Failed to fetch user gift options", { cause: err }); 
-  }
-}
+  return await db.giftOption.findMany({ where: { userId } }); 
+} 
 
 export async function findGiftOptionById(id: string) {
-  try {
-    return await db.giftOption.findUniqueOrThrow({
-      where: { id }
-    });
-  } catch  {
-    throw new Error("Failed to fetch gift option");
-  }
+  return db.giftOption.findUniqueOrThrow({
+    where: { id }
+  });
 }
 
 export async function createGiftOption(userId: string, data: CreateGiftOptionDto) {
-  try {
-    const newGiftOption: Prisma.GiftOptionCreateInput = {
-      ...data,
-      user: { connect: { id: userId }},
-      takenByUser: false,
-    }
-    return await db.giftOption.create({ data: newGiftOption });
-  } catch (err) {
-    throw new Error("Failed to create gift option", { cause: err }); 
-  }
+  const newGiftOption: Prisma.GiftOptionCreateInput = {
+    ...data,
+    user: { connect: { id: userId }},
+    takenByUser: false,
+  };
+
+  return db.giftOption.create({ data: newGiftOption });
 }
 
 export async function updateGiftOptionById(id: string, data: UpdateGiftOptionDto) {
-  try {
-    return await db.giftOption.update({
-      where: { id }, 
-      data
-    });
-  } catch (err) {
-    throw new Error("Failed to update gift option", { cause: err }); 
-  }
+  return db.giftOption.update({
+    where: { id }, 
+    data
+  });
 }
 
 export async function deleteGiftOptionById(id: string) {
-  try {
-    return await db.giftOption.delete({
-      where: { id }
-    });
-  } catch (err) {
-    throw new Error("Failed to delete gift option", { cause: err }); 
-  }
+  return await db.giftOption.delete({
+    where: { id }
+  });
 }

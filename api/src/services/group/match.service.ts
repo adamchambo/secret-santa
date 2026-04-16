@@ -3,13 +3,9 @@ import { findGroupMembersByGroupId } from "./group-member.service.js";
 import { generateMatches } from "@/utils/match-generator.js";
 
 export async function findMatchesByGroupId(groupId: string) {
-  try {
-    return await db.match.findMany({
-      where: { groupId }
-    }); 
-  } catch (err) {
-    throw new Error("Failed to fetch group matches", { cause: err }); 
-  }
+  return await db.match.findMany({
+    where: { groupId }
+  }); 
 }
 
 export async function createMatchesByGroupId(groupId: string) {
@@ -24,16 +20,12 @@ export async function createMatchesByGroupId(groupId: string) {
       }))
     });
   } catch (err) {
-    throw new Error("Failed to create matches", { cause: err }); 
+    throw err; 
   }
 }
 
 export async function deleteMatchesByGroupId(groupId: string) {
-  try {
-    return await db.match.deleteMany({
-      where: { groupId }
-    })
-  } catch (err) {
-    throw new Error("", { cause: err }); 
-  }
+  return await db.match.deleteMany({
+    where: { groupId }
+  })
 }
