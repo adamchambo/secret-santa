@@ -1,3 +1,4 @@
 *.pdf
 tables.png
 notes.txt
+.env
