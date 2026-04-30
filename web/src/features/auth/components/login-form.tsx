@@ -3,19 +3,22 @@
 import FormShell from "./form-shell"
 
 export default function LoginForm() { // use zod validation
-  function handleSubmit() {}
+  function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
+    e.preventDefault();
+  }
   return (
     <FormShell title="Login">
-      <form onSubmit={handleSubmit}>
-        <div>
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+        <div className="flex flex-col gap-2">
           <label htmlFor="email">Email Address</label>
-          <input id="email" type="email"></input>
+          <input className="h-10 bg-background text-text-muted rounded-sm py-2 pl-2" id="email" type="email" placeholder="bob-ross@email.com"></input>
         </div>
-        <div>
+        <div className="flex flex-col gap-2">
           <label>Password</label>
-          <input id="password" type="password"></input>
+          <input className="h-10 bg-background text-text-muted rounded-sm py-2 pl-2" id="password" type="password" placeholder="randompassword123"></input>
         </div>
-        <button>Log in</button> // add icon 
+        <button className="h-10 self-center mt-4 p-1 bg-primary rounded-md items-center hover:cursor-pointer text-white w-full">Submit</button> 
+        {/* add icon to submit */}
       </form>
     </FormShell>
   )
