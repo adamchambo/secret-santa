@@ -16,10 +16,8 @@
     // and npm install -D @types/node
 
     "esModuleInterop": true,
-
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
+      "@/*": ["./src/*"],
       "@db/*": ["../db/*"]
     },
 
@@ -40,8 +38,7 @@
     // "noFallthroughCasesInSwitch": true,
     // "noPropertyAccessFromIndexSignature": true,
 
-    // Recommended Options
-    "strict": true,
+    // Recommended "strict": true,
     "jsx": "react-jsx",
     "verbatimModuleSyntax": false,
     "isolatedModules": true,
