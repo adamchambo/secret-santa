@@ -1,4 +1,4 @@
-import Logo from "@/src/components/ui/logo";
+import Logo from "@/src/shared/ui/logo";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
