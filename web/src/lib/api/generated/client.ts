@@ -5,4 +5,1275 @@
  * API documentation for the Secret Santa application
  * OpenAPI spec version: 1.0.0
  */
+export interface CreateGroup {
+  name: string;
+  eventDate?: string;
+}
 
+export interface UpdateGroup {
+  name?: string;
+  eventDate?: string;
+}
+
+export interface Group {
+  id: string;
+  name: string;
+  eventDate?: string;
+  adminId: string;
+  isLocked: boolean;
+  createdAt: string;
+  inviteCode: string;
+  inviteExpiresAt?: string;
+}
+
+export interface CreateGroupMember {
+  userId: string;
+}
+
+export interface UpdateGroupMember {
+  familyId?: string;
+}
+
+export interface GroupMember {
+  id: string;
+  memberId: string;
+  groupId: string;
+  familyId?: string;
+  joinedAt?: string;
+}
+
+export interface CreateFamily {
+  name: string;
+}
+
+export interface UpdateFamily {
+  name?: string;
+}
+
+export interface Family {
+  id: string;
+  groupId: string;
+  name: string;
+}
+
+export interface Match {
+  id: string;
+  groupId: string;
+  givingUserId: string;
+  receivingUserId: string;
+  createdAt: string;
+}
+
+export interface CreateMessage {
+  /** @maxLength 2000 */
+  content: string;
+}
+
+export interface UpdateMessage {
+  /** @maxLength 2000 */
+  content: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  chatId: string;
+  senderUserId: string;
+  content: string;
+  createdAt: string;
+  editedAt: string;
+}
+
+export interface ErrorResponse {
+  error: string;
+}
+
+export interface MessageResponse {
+  message: string;
+}
+
+export interface CreateUser {
+  displayName?: string;
+  email: string;
+  password: string;
+  icon?: string;
+}
+
+export interface UpdateUser {
+  displayName?: string;
+  email?: string;
+  icon?: string;
+}
+
+export interface User {
+  id: string;
+  displayName?: string;
+  email: string;
+  icon?: string;
+}
+
+export interface CreateGiftOption {
+  priority: number;
+  name: string;
+  productUrl?: string;
+}
+
+export interface UpdateGiftOption {
+  priority?: number;
+  name?: string;
+  productUrl?: string;
+}
+
+export interface GiftOption {
+  id: string;
+  priority: number;
+  name: string;
+  productUrl?: string;
+  takenByUser: boolean;
+}
+
+export interface UpsertPreference {
+  dietary?: string;
+  clothingSize?: string;
+  notes?: string;
+}
+
+export interface Preference {
+  id: string;
+  dietary?: string;
+  clothingSize?: string;
+  notes?: string;
+}
+
+export type UpsertSettingsLanguage = typeof UpsertSettingsLanguage[keyof typeof UpsertSettingsLanguage];
+
+
+export const UpsertSettingsLanguage = {
+  EN: 'EN',
+  ES: 'ES',
+  FR: 'FR',
+} as const;
+
+export type UpsertSettingsTheme = typeof UpsertSettingsTheme[keyof typeof UpsertSettingsTheme];
+
+
+export const UpsertSettingsTheme = {
+  LIGHT: 'LIGHT',
+  DARK: 'DARK',
+} as const;
+
+export type UpsertSettingsCurrency = typeof UpsertSettingsCurrency[keyof typeof UpsertSettingsCurrency];
+
+
+export const UpsertSettingsCurrency = {
+  AUD: 'AUD',
+  USD: 'USD',
+  EUR: 'EUR',
+  GBP: 'GBP',
+} as const;
+
+export interface UpsertSettings {
+  language?: UpsertSettingsLanguage;
+  theme?: UpsertSettingsTheme;
+  currency?: UpsertSettingsCurrency;
+}
+
+export type SettingsLanguage = typeof SettingsLanguage[keyof typeof SettingsLanguage];
+
+
+export const SettingsLanguage = {
+  EN: 'EN',
+  ES: 'ES',
+  FR: 'FR',
+} as const;
+
+export type SettingsTheme = typeof SettingsTheme[keyof typeof SettingsTheme];
+
+
+export const SettingsTheme = {
+  LIGHT: 'LIGHT',
+  DARK: 'DARK',
+} as const;
+
+export type SettingsCurrency = typeof SettingsCurrency[keyof typeof SettingsCurrency];
+
+
+export const SettingsCurrency = {
+  AUD: 'AUD',
+  USD: 'USD',
+  EUR: 'EUR',
+  GBP: 'GBP',
+} as const;
+
+export interface Settings {
+  id: string;
+  language: SettingsLanguage;
+  theme: SettingsTheme;
+  currency: SettingsCurrency;
+}
+
+/**
+ * @summary List groups for the authenticated user
+ */
+export const getGetGroupsUrl = () => {
+
+
+
+
+  return `/groups`
+}
+
+export const getGroups = async ( options?: RequestInit): Promise<Group[]> => {
+
+  const res = await fetch(getGetGroupsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: Group[] = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Create a group
+ */
+export const getPostGroupsUrl = () => {
+
+
+
+
+  return `/groups`
+}
+
+export const postGroups = async (createGroup: CreateGroup, options?: RequestInit): Promise<Group> => {
+
+  const res = await fetch(getPostGroupsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createGroup,)
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: Group = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Get a group
+ */
+export const getGetGroupsGroupIdUrl = (groupId: string,) => {
+
+
+
+
+  return `/groups/${groupId}`
+}
+
+export const getGroupsGroupId = async (groupId: string, options?: RequestInit): Promise<Group> => {
+
+  const res = await fetch(getGetGroupsGroupIdUrl(groupId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: Group = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Update a group
+ */
+export const getPutGroupsGroupIdUrl = (groupId: string,) => {
+
+
+
+
+  return `/groups/${groupId}`
+}
+
+export const putGroupsGroupId = async (groupId: string,
+    updateGroup: UpdateGroup, options?: RequestInit): Promise<Group> => {
+
+  const res = await fetch(getPutGroupsGroupIdUrl(groupId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateGroup,)
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: Group = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Delete a group
+ */
+export const getDeleteGroupsGroupIdUrl = (groupId: string,) => {
+
+
+
+
+  return `/groups/${groupId}`
+}
+
+export const deleteGroupsGroupId = async (groupId: string, options?: RequestInit): Promise<void> => {
+
+  const res = await fetch(getDeleteGroupsGroupIdUrl(groupId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: void = body ? JSON.parse(body) : undefined
+  return data
+}
+
+
+
+/**
+ * @summary List group members
+ */
+export const getGetGroupsGroupIdMembersUrl = (groupId: string,) => {
+
+
+
+
+  return `/groups/${groupId}/members`
+}
+
+export const getGroupsGroupIdMembers = async (groupId: string, options?: RequestInit): Promise<GroupMember[]> => {
+
+  const res = await fetch(getGetGroupsGroupIdMembersUrl(groupId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: GroupMember[] = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Add a group member
+ */
+export const getPostGroupsGroupIdMembersUrl = (groupId: string,) => {
+
+
+
+
+  return `/groups/${groupId}/members`
+}
+
+export const postGroupsGroupIdMembers = async (groupId: string,
+    createGroupMember: CreateGroupMember, options?: RequestInit): Promise<GroupMember> => {
+
+  const res = await fetch(getPostGroupsGroupIdMembersUrl(groupId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createGroupMember,)
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: GroupMember = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Update a group member
+ */
+export const getPutGroupsGroupIdMembersMemberIdUrl = (groupId: string,
+    memberId: string,) => {
+
+
+
+
+  return `/groups/${groupId}/members/${memberId}`
+}
+
+export const putGroupsGroupIdMembersMemberId = async (groupId: string,
+    memberId: string,
+    updateGroupMember: UpdateGroupMember, options?: RequestInit): Promise<GroupMember> => {
+
+  const res = await fetch(getPutGroupsGroupIdMembersMemberIdUrl(groupId,memberId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateGroupMember,)
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: GroupMember = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Remove a group member
+ */
+export const getDeleteGroupsGroupIdMembersMemberIdUrl = (groupId: string,
+    memberId: string,) => {
+
+
+
+
+  return `/groups/${groupId}/members/${memberId}`
+}
+
+export const deleteGroupsGroupIdMembersMemberId = async (groupId: string,
+    memberId: string, options?: RequestInit): Promise<void> => {
+
+  const res = await fetch(getDeleteGroupsGroupIdMembersMemberIdUrl(groupId,memberId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: void = body ? JSON.parse(body) : undefined
+  return data
+}
+
+
+
+/**
+ * @summary List families in a group
+ */
+export const getGetGroupsGroupIdFamiliesUrl = (groupId: string,) => {
+
+
+
+
+  return `/groups/${groupId}/families`
+}
+
+export const getGroupsGroupIdFamilies = async (groupId: string, options?: RequestInit): Promise<Family[]> => {
+
+  const res = await fetch(getGetGroupsGroupIdFamiliesUrl(groupId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: Family[] = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Create a family
+ */
+export const getPostGroupsGroupIdFamiliesUrl = (groupId: string,) => {
+
+
+
+
+  return `/groups/${groupId}/families`
+}
+
+export const postGroupsGroupIdFamilies = async (groupId: string,
+    createFamily: CreateFamily, options?: RequestInit): Promise<Family> => {
+
+  const res = await fetch(getPostGroupsGroupIdFamiliesUrl(groupId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createFamily,)
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: Family = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Update a family
+ */
+export const getPutGroupsGroupIdFamiliesFamilyIdUrl = (groupId: string,
+    familyId: string,) => {
+
+
+
+
+  return `/groups/${groupId}/families/${familyId}`
+}
+
+export const putGroupsGroupIdFamiliesFamilyId = async (groupId: string,
+    familyId: string,
+    updateFamily: UpdateFamily, options?: RequestInit): Promise<Family> => {
+
+  const res = await fetch(getPutGroupsGroupIdFamiliesFamilyIdUrl(groupId,familyId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateFamily,)
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: Family = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Delete a family
+ */
+export const getDeleteGroupsGroupIdFamiliesFamilyIdUrl = (groupId: string,
+    familyId: string,) => {
+
+
+
+
+  return `/groups/${groupId}/families/${familyId}`
+}
+
+export const deleteGroupsGroupIdFamiliesFamilyId = async (groupId: string,
+    familyId: string, options?: RequestInit): Promise<void> => {
+
+  const res = await fetch(getDeleteGroupsGroupIdFamiliesFamilyIdUrl(groupId,familyId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: void = body ? JSON.parse(body) : undefined
+  return data
+}
+
+
+
+/**
+ * @summary List group matches
+ */
+export const getGetGroupsGroupIdMatchesUrl = (groupId: string,) => {
+
+
+
+
+  return `/groups/${groupId}/matches`
+}
+
+export const getGroupsGroupIdMatches = async (groupId: string, options?: RequestInit): Promise<Match[]> => {
+
+  const res = await fetch(getGetGroupsGroupIdMatchesUrl(groupId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: Match[] = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Generate group matches
+ */
+export const getPostGroupsGroupIdMatchesUrl = (groupId: string,) => {
+
+
+
+
+  return `/groups/${groupId}/matches`
+}
+
+export const postGroupsGroupIdMatches = async (groupId: string, options?: RequestInit): Promise<Match[]> => {
+
+  const res = await fetch(getPostGroupsGroupIdMatchesUrl(groupId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: Match[] = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Delete group matches
+ */
+export const getDeleteGroupsGroupIdMatchesMatchIdUrl = (groupId: string,
+    matchId: string,) => {
+
+
+
+
+  return `/groups/${groupId}/matches/${matchId}`
+}
+
+export const deleteGroupsGroupIdMatchesMatchId = async (groupId: string,
+    matchId: string, options?: RequestInit): Promise<void> => {
+
+  const res = await fetch(getDeleteGroupsGroupIdMatchesMatchIdUrl(groupId,matchId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: void = body ? JSON.parse(body) : undefined
+  return data
+}
+
+
+
+/**
+ * @summary List group chat messages
+ */
+export const getGetGroupsGroupIdChatMessagesUrl = (groupId: string,) => {
+
+
+
+
+  return `/groups/${groupId}/chat/messages`
+}
+
+export const getGroupsGroupIdChatMessages = async (groupId: string, options?: RequestInit): Promise<ChatMessage[]> => {
+
+  const res = await fetch(getGetGroupsGroupIdChatMessagesUrl(groupId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: ChatMessage[] = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Create a group chat message
+ */
+export const getPostGroupsGroupIdChatMessagesUrl = (groupId: string,) => {
+
+
+
+
+  return `/groups/${groupId}/chat/messages`
+}
+
+export const postGroupsGroupIdChatMessages = async (groupId: string,
+    createMessage: CreateMessage, options?: RequestInit): Promise<ChatMessage> => {
+
+  const res = await fetch(getPostGroupsGroupIdChatMessagesUrl(groupId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createMessage,)
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: ChatMessage = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Edit a group chat message
+ */
+export const getPutGroupsGroupIdChatMessagesMessageIdUrl = (groupId: string,
+    messageId: string,) => {
+
+
+
+
+  return `/groups/${groupId}/chat/messages/${messageId}`
+}
+
+export const putGroupsGroupIdChatMessagesMessageId = async (groupId: string,
+    messageId: string,
+    updateMessage: UpdateMessage, options?: RequestInit): Promise<ChatMessage> => {
+
+  const res = await fetch(getPutGroupsGroupIdChatMessagesMessageIdUrl(groupId,messageId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateMessage,)
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: ChatMessage = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Delete a group chat message
+ */
+export const getDeleteGroupsGroupIdChatMessagesMessageIdUrl = (groupId: string,
+    messageId: string,) => {
+
+
+
+
+  return `/groups/${groupId}/chat/messages/${messageId}`
+}
+
+export const deleteGroupsGroupIdChatMessagesMessageId = async (groupId: string,
+    messageId: string, options?: RequestInit): Promise<void> => {
+
+  const res = await fetch(getDeleteGroupsGroupIdChatMessagesMessageIdUrl(groupId,messageId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: void = body ? JSON.parse(body) : undefined
+  return data
+}
+
+
+
+/**
+ * @summary Create a user
+ */
+export const getPostUsersUrl = () => {
+
+
+
+
+  return `/users`
+}
+
+export const postUsers = async (createUser: CreateUser, options?: RequestInit): Promise<User> => {
+
+  const res = await fetch(getPostUsersUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createUser,)
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: User = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Get the authenticated user
+ */
+export const getGetUsersUserIdUrl = (userId: string,) => {
+
+
+
+
+  return `/users/${userId}`
+}
+
+export const getUsersUserId = async (userId: string, options?: RequestInit): Promise<User> => {
+
+  const res = await fetch(getGetUsersUserIdUrl(userId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: User = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Update the authenticated user
+ */
+export const getPutUsersUserIdUrl = (userId: string,) => {
+
+
+
+
+  return `/users/${userId}`
+}
+
+export const putUsersUserId = async (userId: string,
+    updateUser: UpdateUser, options?: RequestInit): Promise<User> => {
+
+  const res = await fetch(getPutUsersUserIdUrl(userId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateUser,)
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: User = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Delete the authenticated user
+ */
+export const getDeleteUsersUserIdUrl = (userId: string,) => {
+
+
+
+
+  return `/users/${userId}`
+}
+
+export const deleteUsersUserId = async (userId: string, options?: RequestInit): Promise<MessageResponse> => {
+
+  const res = await fetch(getDeleteUsersUserIdUrl(userId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: MessageResponse = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary List gift options for the authenticated user
+ */
+export const getGetUsersUserIdGiftOptionsUrl = (userId: string,) => {
+
+
+
+
+  return `/users/${userId}/gift-options`
+}
+
+export const getUsersUserIdGiftOptions = async (userId: string, options?: RequestInit): Promise<GiftOption[]> => {
+
+  const res = await fetch(getGetUsersUserIdGiftOptionsUrl(userId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: GiftOption[] = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Create a gift option
+ */
+export const getPostUsersUserIdGiftOptionsUrl = (userId: string,) => {
+
+
+
+
+  return `/users/${userId}/gift-options`
+}
+
+export const postUsersUserIdGiftOptions = async (userId: string,
+    createGiftOption: CreateGiftOption, options?: RequestInit): Promise<GiftOption> => {
+
+  const res = await fetch(getPostUsersUserIdGiftOptionsUrl(userId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createGiftOption,)
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: GiftOption = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Get a gift option
+ */
+export const getGetUsersUserIdGiftOptionsGiftOptionIdUrl = (userId: string,
+    giftOptionId: string,) => {
+
+
+
+
+  return `/users/${userId}/gift-options/${giftOptionId}`
+}
+
+export const getUsersUserIdGiftOptionsGiftOptionId = async (userId: string,
+    giftOptionId: string, options?: RequestInit): Promise<GiftOption> => {
+
+  const res = await fetch(getGetUsersUserIdGiftOptionsGiftOptionIdUrl(userId,giftOptionId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: GiftOption = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Update a gift option
+ */
+export const getPutUsersUserIdGiftOptionsGiftOptionIdUrl = (userId: string,
+    giftOptionId: string,) => {
+
+
+
+
+  return `/users/${userId}/gift-options/${giftOptionId}`
+}
+
+export const putUsersUserIdGiftOptionsGiftOptionId = async (userId: string,
+    giftOptionId: string,
+    updateGiftOption: UpdateGiftOption, options?: RequestInit): Promise<GiftOption> => {
+
+  const res = await fetch(getPutUsersUserIdGiftOptionsGiftOptionIdUrl(userId,giftOptionId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateGiftOption,)
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: GiftOption = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Delete a gift option
+ */
+export const getDeleteUsersUserIdGiftOptionsGiftOptionIdUrl = (userId: string,
+    giftOptionId: string,) => {
+
+
+
+
+  return `/users/${userId}/gift-options/${giftOptionId}`
+}
+
+export const deleteUsersUserIdGiftOptionsGiftOptionId = async (userId: string,
+    giftOptionId: string, options?: RequestInit): Promise<MessageResponse> => {
+
+  const res = await fetch(getDeleteUsersUserIdGiftOptionsGiftOptionIdUrl(userId,giftOptionId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: MessageResponse = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Get user preferences
+ */
+export const getGetUsersUserIdPreferencesUrl = (userId: string,) => {
+
+
+
+
+  return `/users/${userId}/preferences`
+}
+
+export const getUsersUserIdPreferences = async (userId: string, options?: RequestInit): Promise<Preference> => {
+
+  const res = await fetch(getGetUsersUserIdPreferencesUrl(userId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: Preference = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Create or update user preferences
+ */
+export const getPutUsersUserIdPreferencesUrl = (userId: string,) => {
+
+
+
+
+  return `/users/${userId}/preferences`
+}
+
+export const putUsersUserIdPreferences = async (userId: string,
+    upsertPreference: UpsertPreference, options?: RequestInit): Promise<Preference> => {
+
+  const res = await fetch(getPutUsersUserIdPreferencesUrl(userId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      upsertPreference,)
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: Preference = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Get user settings
+ */
+export const getGetUsersUserIdSettingsUrl = (userId: string,) => {
+
+
+
+
+  return `/users/${userId}/settings`
+}
+
+export const getUsersUserIdSettings = async (userId: string, options?: RequestInit): Promise<Settings> => {
+
+  const res = await fetch(getGetUsersUserIdSettingsUrl(userId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: Settings = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+/**
+ * @summary Create or update user settings
+ */
+export const getPutUsersUserIdSettingsUrl = (userId: string,) => {
+
+
+
+
+  return `/users/${userId}/settings`
+}
+
+export const putUsersUserIdSettings = async (userId: string,
+    upsertSettings: UpsertSettings, options?: RequestInit): Promise<Settings> => {
+
+  const res = await fetch(getPutUsersUserIdSettingsUrl(userId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      upsertSettings,)
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: Settings = body ? JSON.parse(body) : {}
+  return data
+}
