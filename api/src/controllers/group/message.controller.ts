@@ -1,6 +1,18 @@
 import { CreateMessageDto } from "@/dtos/group/message.dto.js";
-import { createMessageByGroupId, deleteMessageById, editMessageById, findMessagesByGroupId } from "@/services/group/message.service.js";
+import { createMessageByGroupId, deleteMessageById, editMessageById, findMessageById, findMessagesByGroupId } from "@/services/group/message.service.js";
 import { NextFunction, Request, Response } from "express";
+
+export async function getMessage(req: Request, res: Response, next: NextFunction) {
+  try {
+    const messageId = req.params.messageId;
+    if (!messageId || typeof messageId !== "string") return res.status(404).json({ error: "Request doesn't have a valid message id" });
+     // add cursor pagination
+    const message = await findMessageById(messageId);
+    return res.json(message);
+  } catch (err) {
+    next(err);
+  }
+}
 
 export async function getMessages(req: Request, res: Response, next: NextFunction) {
   try {

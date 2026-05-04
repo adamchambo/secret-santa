@@ -38,13 +38,17 @@ export function requireOwner(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-export function requireResourceOwner(getResource: (id: string) => Promise<{ userId: string } | null>, idParam: string) {
+export function requireResourceOwner<T extends Record<string, unknown>>(
+  getResource: (id: string) => Promise<T | null>,
+  idParam: string,
+  ownerKey: keyof T = "userId",
+) {
   return async (req: Request, res: Response, next: NextFunction) => {
     const id = req.params[idParam];
     if (!id || typeof id !== "string") return res.status(400).json({ error: "Invalid resource id"});
     const resource = await getResource(id);
     if (!resource) return res.status(404).json({ error: "Not found" });
-    if (resource.userId !== req.user?.sub) return res.status(403).json({ error: "Forbidden" });
+    if (resource[ownerKey] !== req.user?.sub) return res.status(403).json({ error: "Forbidden" });
     next();
   }
 }
@@ -70,4 +74,3 @@ export function requireGroupAdmin(req: Request, res: Response, next: NextFunctio
   if (uid !== req.params.adminId) return res.status(403).json({ error: "Forbidden" });
   next();
 }
-

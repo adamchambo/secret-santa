@@ -1,14 +1,45 @@
 import { Router } from "express";
-import { createGroup, deleteGroup, getGroup, getGroups, updateGroup } from "../controllers/group/group.controller.js";
-import { createGroupMember, deleteGroupMember, getGroupMembers, updateGroupMember } from "../controllers/group/group-member.controller.js";
-import { createFamily, deleteFamily, getFamilies, updateFamily } from "../controllers/group/family.controller.js";
-import { createMatches, deleteMatches, getMatches } from "../controllers/group/match.controller.js";
-import { createMessage, deleteMessage, editMessage, getMessages } from "../controllers/group/message.controller.js";
-import { requireAuth, requireGroupAdmin, requireGroupMember, requireResourceOwner } from "@/middleware/auth.middleware.js";
+import {
+  createGroup,
+  deleteGroup,
+  getGroup,
+  getGroups,
+  updateGroup,
+} from "../controllers/group/group.controller.js";
+import {
+  createGroupMember,
+  deleteGroupMember,
+  getGroupMembers,
+  updateGroupMember,
+} from "../controllers/group/group-member.controller.js";
+import {
+  createFamily,
+  deleteFamily,
+  getFamilies,
+  updateFamily,
+} from "../controllers/group/family.controller.js";
+import {
+  createMatches,
+  deleteMatches,
+  getMatches,
+} from "../controllers/group/match.controller.js";
+import {
+  createMessage,
+  deleteMessage,
+  editMessage,
+  getMessage,
+  getMessages,
+} from "../controllers/group/message.controller.js";
+import {
+  requireAuth,
+  requireGroupAdmin,
+  requireGroupMember,
+  requireResourceOwner,
+} from "@/middleware/auth.middleware.js";
 import { findMessageById } from "@/services/group/message.service.js";
 
-export const groupRouter = Router(); 
-groupRouter.use(requireAuth); 
+export const groupRouter = Router();
+groupRouter.use(requireAuth);
 
 /**
  * @openapi
@@ -188,7 +219,7 @@ groupRouter.use(requireAuth);
  *       401:
  *         description: Missing or invalid auth token
  */
-groupRouter.get('/', getGroups); // use query param
+groupRouter.get("/", getGroups); // use query param
 /**
  * @openapi
  * /groups/{groupId}:
@@ -214,7 +245,7 @@ groupRouter.get('/', getGroups); // use query param
  *       404:
  *         description: Invalid group id
  */
-groupRouter.get('/:groupId', getGroup); 
+groupRouter.get("/:groupId", getGroup);
 /**
  * @openapi
  * /groups:
@@ -239,7 +270,7 @@ groupRouter.get('/:groupId', getGroup);
  *       400:
  *         description: Invalid group data
  */
-groupRouter.post('/', createGroup); 
+groupRouter.post("/", createGroup);
 /**
  * @openapi
  * /groups/{groupId}:
@@ -271,7 +302,7 @@ groupRouter.post('/', createGroup);
  *       403:
  *         description: Authenticated user is not the group admin
  */
-groupRouter.put('/:groupId', requireGroupAdmin, updateGroup);
+groupRouter.put("/:groupId", requireGroupAdmin, updateGroup);
 /**
  * @openapi
  * /groups/{groupId}:
@@ -293,13 +324,13 @@ groupRouter.put('/:groupId', requireGroupAdmin, updateGroup);
  *       403:
  *         description: Authenticated user is not the group admin
  */
-groupRouter.delete('/:groupId', requireGroupAdmin, deleteGroup)
+groupRouter.delete("/:groupId", requireGroupAdmin, deleteGroup);
 
 /* ---------------- CHILD ROUTERS ---------------- */
 const memberRouter = Router({ mergeParams: true });
 const familyRouter = Router({ mergeParams: true });
 const matchRouter = Router({ mergeParams: true });
-const messageRouter = Router({ mergeParams: true }); 
+const messageRouter = Router({ mergeParams: true });
 
 /* ---------------- GROUP MEMBER ROUTES ---------------- */
 /**
@@ -327,7 +358,7 @@ const messageRouter = Router({ mergeParams: true });
  *               items:
  *                 $ref: '#/components/schemas/GroupMember'
  */
-memberRouter.get('/', getGroupMembers);
+memberRouter.get("/", getGroupMembers);
 /**
  * @openapi
  * /groups/{groupId}/members:
@@ -357,7 +388,7 @@ memberRouter.get('/', getGroupMembers);
  *             schema:
  *               $ref: '#/components/schemas/GroupMember'
  */
-memberRouter.post('/', createGroupMember);
+memberRouter.post("/", createGroupMember);
 /**
  * @openapi
  * /groups/{groupId}/members/{memberId}:
@@ -393,7 +424,7 @@ memberRouter.post('/', createGroupMember);
  *             schema:
  *               $ref: '#/components/schemas/GroupMember'
  */
-memberRouter.put('/:memberId', updateGroupMember);  
+memberRouter.put("/:memberId", updateGroupMember);
 /**
  * @openapi
  * /groups/{groupId}/members/{memberId}:
@@ -419,7 +450,7 @@ memberRouter.put('/:memberId', updateGroupMember);
  *       204:
  *         description: Group member removed
  */
-memberRouter.delete('/:memberId', deleteGroupMember); 
+memberRouter.delete("/:memberId", deleteGroupMember);
 
 /* ---------------- FAMILY ROUTES ---------------- */
 /**
@@ -447,7 +478,7 @@ memberRouter.delete('/:memberId', deleteGroupMember);
  *               items:
  *                 $ref: '#/components/schemas/Family'
  */
-familyRouter.get('/', getFamilies);
+familyRouter.get("/", getFamilies);
 /**
  * @openapi
  * /groups/{groupId}/families:
@@ -479,7 +510,7 @@ familyRouter.get('/', getFamilies);
  *       403:
  *         description: Authenticated user is not the group admin
  */
-familyRouter.post('/', requireGroupAdmin, createFamily);
+familyRouter.post("/", requireGroupAdmin, createFamily);
 /**
  * @openapi
  * /groups/{groupId}/families/{familyId}:
@@ -515,7 +546,7 @@ familyRouter.post('/', requireGroupAdmin, createFamily);
  *             schema:
  *               $ref: '#/components/schemas/Family'
  */
-familyRouter.put('/:familyId', requireGroupAdmin, updateFamily);
+familyRouter.put("/:familyId", requireGroupAdmin, updateFamily);
 /**
  * @openapi
  * /groups/{groupId}/families/{familyId}:
@@ -541,7 +572,7 @@ familyRouter.put('/:familyId', requireGroupAdmin, updateFamily);
  *       204:
  *         description: Family deleted
  */
-familyRouter.delete('/:familyId', requireGroupAdmin, deleteFamily);
+familyRouter.delete("/:familyId", requireGroupAdmin, deleteFamily);
 
 /* ---------------- MATCH ROUTES ---------------- */
 /**
@@ -569,7 +600,7 @@ familyRouter.delete('/:familyId', requireGroupAdmin, deleteFamily);
  *               items:
  *                 $ref: '#/components/schemas/Match'
  */
-matchRouter.get('/', getMatches);
+matchRouter.get("/", getMatches);
 /**
  * @openapi
  * /groups/{groupId}/matches:
@@ -595,7 +626,7 @@ matchRouter.get('/', getMatches);
  *               items:
  *                 $ref: '#/components/schemas/Match'
  */
-matchRouter.post('/', requireGroupAdmin, createMatches); 
+matchRouter.post("/", requireGroupAdmin, createMatches);
 /**
  * @openapi
  * /groups/{groupId}/matches/{matchId}:
@@ -621,10 +652,10 @@ matchRouter.post('/', requireGroupAdmin, createMatches);
  *       204:
  *         description: Matches deleted
  */
-matchRouter.delete('/:matchId', requireGroupAdmin, deleteMatches); 
+matchRouter.delete("/:matchId", requireGroupAdmin, deleteMatches);
 
 /* ---------------- MESSAGE ROUTES ---------------- */
-messageRouter.use('/', requireGroupMember);
+messageRouter.use("/", requireGroupMember);
 /**
  * @openapi
  * /groups/{groupId}/chat/messages:
@@ -650,7 +681,10 @@ messageRouter.use('/', requireGroupMember);
  *               items:
  *                 $ref: '#/components/schemas/ChatMessage'
  */
-messageRouter.get('/', getMessages);
+
+messageRouter.get("/:messageId", getMessage);
+
+messageRouter.get("/", getMessages);
 /**
  * @openapi
  * /groups/{groupId}/chat/messages:
@@ -680,7 +714,7 @@ messageRouter.get('/', getMessages);
  *             schema:
  *               $ref: '#/components/schemas/ChatMessage'
  */
-messageRouter.post('/', createMessage); 
+messageRouter.post("/", createMessage);
 /**
  * @openapi
  * /groups/{groupId}/chat/messages/{messageId}:
@@ -716,7 +750,11 @@ messageRouter.post('/', createMessage);
  *             schema:
  *               $ref: '#/components/schemas/ChatMessage'
  */
-messageRouter.put('/:messageId', requireResourceOwner(findMessageById, "messageId"), editMessage);
+messageRouter.put(
+  "/:messageId",
+  requireResourceOwner(findMessageById, "messageId", "senderUserId"),
+  editMessage,
+);
 /**
  * @openapi
  * /groups/{groupId}/chat/messages/{messageId}:
@@ -742,13 +780,14 @@ messageRouter.put('/:messageId', requireResourceOwner(findMessageById, "messageI
  *       204:
  *         description: Message deleted
  */
-messageRouter.delete('/:messageId', requireResourceOwner(findMessageById, "messageId"), deleteMessage);
+messageRouter.delete(
+  "/:messageId",
+  requireResourceOwner(findMessageById, "messageId", "senderUserId"),
+  deleteMessage,
+);
 
 /* ---------------- MOUNT CHILD ROUTERS ---------------- */
-groupRouter.use('/:groupId/members', memberRouter); 
-groupRouter.use('/:groupId/families', familyRouter);
-groupRouter.use('/:groupId/matches', matchRouter);
-groupRouter.use('/:groupId/chat/messages', messageRouter); 
-
-
-
+groupRouter.use("/:groupId/members", memberRouter);
+groupRouter.use("/:groupId/families", familyRouter);
+groupRouter.use("/:groupId/matches", matchRouter);
+groupRouter.use("/:groupId/chat/messages", messageRouter);
