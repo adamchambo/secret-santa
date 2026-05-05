@@ -1,46 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { CreateUser, postUsers, User } from "@/src/lib/api/generated/client";
 import FormShell from "./form-shell";
+import { AuthFormValues, useAuthForm } from "../hooks/use-auth-form";
 
-export default function LoginForm() {
-  // use zod validation
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
-    e.preventDefault();
+
+export default function RegisterForm() {
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useAuthForm();
+
+  async function onSubmit(data: AuthFormValues) {
+    console.log(data);
+    try {
+      const userData: CreateUser = {
+        email: data.email,
+        password: data.password,
+      };
+      const response: User = await postUsers(userData);
+      console.log(response);
+    } catch (error) {
+      console.error("Error registering user:", error);
+      setError("root", { message: "Failed to register. Please try again." });
+    }
   }
+
   return (
-    <FormShell title="Login">
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        <div className="flex flex-col gap-2">
-          <label htmlFor="email">Email Address</label>
-          <input
-            className="h-10 bg-background 
-          text-text-muted rounded-sm py-2 pl-2"
-            id="email"
-            type="email"
-            placeholder="bob-ross@email.com"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-          ></input>
-        </div>
-        <div className="flex flex-col gap-2">
-          <label>Password</label>
-          <input
-            className="h-10 bg-background text-text-muted rounded-sm py-2 pl-2"
-            id="password"
-            type="password"
-            placeholder="randompassword123"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-          ></input>
-        </div>
-        <button className="h-10 self-center mt-4 p-1 bg-primary rounded-md items-center hover:cursor-pointer text-white w-full">
-          Submit
-        </button>
-        {/* add icon to submit */}
-      </form>
-    </FormShell>
+    <FormShell
+      title="Login"
+      register={register}
+      handleSubmit={handleSubmit}
+      onSubmit={onSubmit}
+      errors={errors}
+      isSubmitting={isSubmitting}
+    />
   );
 }
