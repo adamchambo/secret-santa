@@ -1,16 +1,23 @@
 "use client";
 
 import ErrorText from "@/src/shared/ui/labels/error-text";
+import { FieldErrors, SubmitHandler, UseFormHandleSubmit, UseFormRegister } from "react-hook-form";
+
+type AuthFormValues = {
+  email: string;
+  password: string;
+};
 
 type FormShellProps = {
   title: string;
-  register: any;
-  handleSubmit: any;
-  errors: any;
+  register: UseFormRegister<AuthFormValues>;
+  handleSubmit: UseFormHandleSubmit<AuthFormValues>;
+  onSubmit: SubmitHandler<AuthFormValues>;
+  errors: FieldErrors<AuthFormValues>;
   isSubmitting: boolean;
 };
 
-export default function FormShell({ title, register, handleSubmit, errors, isSubmitting }: FormShellProps) {
+export default function FormShell( {title, register, handleSubmit, onSubmit, errors, isSubmitting}: FormShellProps) {
   // use zod validation
   return (
     <div className="flex-col items-center p-2">

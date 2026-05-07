@@ -1,37 +1,27 @@
 "use client";
 
-import { CreateUser, postUsers, User } from "@/src/lib/api/generated/client";
 import FormShell from "./form-shell";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import z from "zod";
+import { AuthFormValues, useAuthForm } from "../hooks/use-auth-form";
+import { registerUser } from "../api";
+import { useRouter } from "next/router";
 
-type RegisterFormValues = CreateUser;
-
-const registerSchema = z.object({
-  email: z.email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters long"),
-});
 
 export default function RegisterForm() {
+  const navigate = useRouter();
   const {
     register,
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
-  });
+  } = useAuthForm();
 
-  async function onSubmit(data: RegisterFormValues) {
+  async function onSubmit(data: AuthFormValues) {
     console.log(data);
     try {
-      const userData: CreateUser = {
-        email: data.email,
-        password: data.password,
-      };
-      const response: User = await postUsers(userData);
-      console.log(response);
+      const user = await registerUser(data.email, data.password);
+      if (!user) throw new Error("User registration failed");
+      console.log("Registered user:", user);
+      navigate.push("/dashboard");
     } catch (error) {
       console.error("Error registering user:", error);
       setError("root", { message: "Failed to register. Please try again." });

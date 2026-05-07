@@ -92,15 +92,14 @@ export interface MessageResponse {
 }
 
 export interface CreateUser {
+  id: string;
   displayName?: string;
   email: string;
-  password: string;
   icon?: string;
 }
 
 export interface UpdateUser {
   displayName?: string;
-  email?: string;
   icon?: string;
 }
 

@@ -1,11 +1,14 @@
 "use client";
 
-import { CreateUser, postUsers, User } from "@/src/lib/api/generated/client";
 import FormShell from "./form-shell";
 import { AuthFormValues, useAuthForm } from "../hooks/use-auth-form";
+import { User } from "@supabase/supabase-js";
+import { loginUser } from "../api";
+import { useRouter } from "next/router";
 
 
 export default function RegisterForm() {
+  const navigate = useRouter();
   const {
     register,
     handleSubmit,
@@ -16,15 +19,17 @@ export default function RegisterForm() {
   async function onSubmit(data: AuthFormValues) {
     console.log(data);
     try {
-      const userData: CreateUser = {
+      const userData = {
         email: data.email,
         password: data.password,
       };
-      const response: User = await postUsers(userData);
-      console.log(response);
+      const user: User = await loginUser(userData.email, userData.password);
+      if (!user) throw new Error("User login failed");
+      console.log("Logged in user:", user);
+      navigate.push("/dashboard");
     } catch (error) {
-      console.error("Error registering user:", error);
-      setError("root", { message: "Failed to register. Please try again." });
+      console.error("Error logging in user:", error);
+      setError("root", { message: "Failed to log in. Please try again." });
     }
   }
 
