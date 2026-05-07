@@ -31,16 +31,16 @@ export const userRouter = Router();
  *           type: string
  *     CreateUser:
  *       type: object
- *       required: [email, password]
+ *       required: [id, email]
  *       properties:
+ *         id:
+ *           type: string
+ *           format: uuid
  *         displayName:
  *           type: string
  *         email:
  *           type: string
  *           format: email
- *         password:
- *           type: string
- *           format: password
  *         icon:
  *           type: string
  *     UpdateUser:
@@ -48,9 +48,6 @@ export const userRouter = Router();
  *       properties:
  *         displayName:
  *           type: string
- *         email:
- *           type: string
- *           format: email
  *         icon:
  *           type: string
  *     User:

@@ -1,16 +1,16 @@
+import { User } from "@db/generated/prisma/client.js";
+
 /* ---------------- REQUEST DTOS ---------------- */
-export type CreateUserDto = {
+interface UserDto {
+  id: string;
   displayName?: string;
   email: string;
-  password: string; 
   icon?: string
 }
 
-export type UpdateUserDto = {
-  displayName?: string;
-  email?: string;
-  icon?: string;
-}
+export type CreateUserDto = UserDto;
+
+export type UpdateUserDto = Partial<Omit<UserDto, "id" | "email">>;;
 
 /* ---------------- RESPONSE DTOS ---------------- */
 export type UserResponseDto = {
