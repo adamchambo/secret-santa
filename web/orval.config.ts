@@ -9,6 +9,7 @@ export default defineConfig({
       target: "./src/lib/api/generated/client.ts",
       client: "fetch",
       clean: true,
+      baseUrl: "http://localhost:5001/api",
       override: {
         fetch: {
           includeHttpResponseReturnType: false,

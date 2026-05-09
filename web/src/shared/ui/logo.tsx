@@ -1,13 +1,14 @@
 import Image from "next/image";
 
-type LogoProps = {
-  className?: string
-}
-
 export default function Logo({ className = "" }) {
   return (
-    <div className={`relative w-10 h-10 md:w-12 md:h-12 ${className}`}>
-      <Image src="/santa-hat.png" alt="santa hat" fill className="object-contain" />
+    <div className={`relative w-8 h-8 md:w-10 md:h-10 ${className}`}>
+      <Image
+        src="/santa-hat.png"
+        alt="santa hat"
+        fill
+        className="object-contain"
+      />
     </div>
   );
 }

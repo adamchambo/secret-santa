@@ -5,7 +5,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <div className="flex flex-col min-h-screen bg-background px-4">
       <div className="flex-1 flex flex-col justify-center items-center ">
         <header className="flex flex-col items-center text-primary font-bold m-4">
-          <Logo />
+          <div>
+            <Logo className="absolute top-3 z-10" />
+          </div>
           <h1 className="text-2xl">Secret Santa</h1>
         </header>
 
