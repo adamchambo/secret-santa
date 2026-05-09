@@ -160,7 +160,7 @@ export const userRouter = Router();
  * /users:
  *   post:
  *     tags: [Users]
- *     summary: Create a user
+ *     summary: Create or update a user
  *     requestBody:
  *       required: true
  *       content:
@@ -168,8 +168,8 @@ export const userRouter = Router();
  *           schema:
  *             $ref: '#/components/schemas/CreateUser'
  *     responses:
- *       201:
- *         description: User created
+ *       200:
+ *         description: User created or updated
  *         content:
  *           application/json:
  *             schema:

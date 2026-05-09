@@ -8,17 +8,17 @@ export async function getUser(req: Request, res: Response, next: NextFunction) {
     const user = await findUserById(id);
     return res.json(user); 
   } catch (err) {
-    next(err); 
+    next(err);
   }
 }
 
 export async function createUser(req: Request, res: Response, next: NextFunction) {
   try {
     const data = req.body as CreateUserDto;
-    if (!data.email || !data.password) 
+    if (!data.email || !data.id) 
       return res.status(400).json({ error: "Missing required fields" }); 
     const user = await createUserService(data);
-    return res.status(201).json(user);  
+    return res.status(200).json(user);  
   } catch (err) {
     next(err); 
   }
@@ -46,4 +46,3 @@ export async function deleteUser(req: Request, res: Response, next: NextFunction
     next(err); 
   }
 }
-
