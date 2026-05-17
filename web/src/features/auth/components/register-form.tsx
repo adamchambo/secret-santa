@@ -24,7 +24,7 @@ export default function RegisterForm() {
         setError("confirmPassword", { message: "Passwords do not match" });
         return;
       }
-      const user = await registerUser(data.email, data.password);
+      const user = await registerUser(data.email, data.password, data.displayName);
       if (!user) throw new Error("User registration failed");
       console.log("Registered user:", user);
       navigate.push("/verrify-email");
@@ -41,9 +41,22 @@ export default function RegisterForm() {
           onSubmit={onSubmit}
         >
           <div className="flex flex-col gap-2">
-            <label htmlFor="email">Email Address</label>
+            <label htmlFor="displayName">Display Name</label>
             <input
               className="h-10 bg-background text-text-muted rounded-sm py-2 pl-2"
+              id="displayName"
+              type="text"
+              placeholder="Bob Ross"
+              {...register("displayName", {
+                onChange: () => clearErrors("root"),
+              })}
+            ></input>
+            <ErrorText text={errors.displayName?.message || ""} />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="email">Email Address</label>
+            <input
+              className="h-10 bg-background text-text-muted rounded-sm py-4 pl-2"
               id="email"
               type="email"
               placeholder="bob-ross@email.com"
@@ -53,31 +66,33 @@ export default function RegisterForm() {
             ></input>
             <ErrorText text={errors.email?.message || ""} />
           </div>
-          <div className="flex flex-col gap-2">
-            <label>Password</label>
-            <input
-              className="h-10 bg-background text-text-muted rounded-sm py-2 pl-2"
-              id="password"
-              type="password"
-              placeholder="************"
-              {...register("password", {
-                onChange: () => clearErrors("root"),
-              })}
-            ></input>
-            <ErrorText text={errors.password?.message || ""} />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label>Confirm Password</label>
-            <input
-              className="h-10 bg-background text-text-muted rounded-sm py-2 pl-2"
-              id="confirmPassword"
-              type="password"
-              placeholder="************"
-              {...register("confirmPassword", {
-                onChange: () => clearErrors("root"),
-              })}
-            ></input>
-            <ErrorText text={errors.confirmPassword?.message || ""} />
+          <div className="flex flex-col gap-4 sm:flex-row">
+            <div className="flex flex-1 flex-col gap-2">
+              <label>Password</label>
+              <input
+                className="h-10 bg-background text-text-muted rounded-sm py-2 pl-2"
+                id="password"
+                type="password"
+                placeholder="************"
+                {...register("password", {
+                  onChange: () => clearErrors("root"),
+                })}
+              ></input>
+              <ErrorText text={errors.password?.message || ""} />
+            </div>
+            <div className="flex flex-1 flex-col gap-2">
+              <label>Confirm Password</label>
+              <input
+                className="h-10 bg-background text-text-muted rounded-sm py-2 pl-2"
+                id="confirmPassword"
+                type="password"
+                placeholder="************"
+                {...register("confirmPassword", {
+                  onChange: () => clearErrors("root"),
+                })}
+              ></input>
+              <ErrorText text={errors.confirmPassword?.message || ""} />
+            </div>
           </div>
             <button className="h-10 self-center mt-4 p-1 bg-primary rounded-md items-center hover:cursor-pointer text-white w-full">
               {isSubmitting ? "Registering..." : "Register"}

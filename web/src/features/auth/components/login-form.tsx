@@ -6,6 +6,7 @@ import { User } from "@supabase/supabase-js";
 import { loginUser } from "../api";
 import { useRouter } from "next/navigation";
 import ErrorText from "@/src/shared/ui/labels/error-text";
+import Link from "next/link";
 
 
 export default function LoginForm() {
@@ -28,7 +29,7 @@ export default function LoginForm() {
       const user: User = await loginUser(userData.email, userData.password);
       if (!user) throw new Error("User login failed");
       console.log("Logged in user:", user);
-      navigate.push("/dashboard");
+      navigate.push("/groups");
     } catch (error) {
       console.error("Error logging in user:", error);
       setError("root", { message: "Failed to log in. Please try again." });
@@ -57,7 +58,7 @@ export default function LoginForm() {
       <div className="flex flex-col gap-2">
         <label>Password</label>
         <input
-          className="h-10 bg-background text-text-muted rounded-sm py-2 pl-2"
+          className="h-10 bg-background text-text-muted rounded-sm pl-2"
           id="password"
           type="password"
           placeholder="************"
@@ -66,6 +67,12 @@ export default function LoginForm() {
           })}
         ></input>
         <ErrorText text={errors.password?.message || ""} />
+        <Link
+          className="text-center text-sm text-primary hover:underline"
+          href="/forgot-password"
+        >
+          Forgot password?
+        </Link>
       </div>
         <button className="h-10 self-center mt-4 p-1 bg-primary rounded-md items-center hover:cursor-pointer text-white w-full">
           {isSubmitting ? "Logging in..." : "Login"}
