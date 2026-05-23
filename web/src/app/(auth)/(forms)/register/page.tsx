@@ -3,12 +3,12 @@ import Link from "next/link";
 
 export default function RegisterPage() {
   return (
-      <div className="text-text">
+      <div>
         <RegisterForm />
-        <div className="mx-auto text-center mt-4">
-          <p className="text-sm">
+        <div className="mx-auto mt-6 border-t border-border pt-5 text-center">
+          <p className="text-sm text-text-muted">
             Already have an account?{" "}
-            <Link className="text-primary hover:underline" href="/login">
+            <Link className="font-bold text-primary hover:underline" href="/login">
               Login
             </Link>
           </p>

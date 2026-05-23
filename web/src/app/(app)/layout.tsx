@@ -1,3 +1,4 @@
+import AppFooter from "@/src/shared/layout/app-footer";
 import NavBar from "@/src/shared/layout/nav-bar";
 
 type MainLayoutProps = {
@@ -6,18 +7,14 @@ type MainLayoutProps = {
 
 export default function MainLayout({ children }: MainLayoutProps) {
   return (
-    <div>
+    <div className="flex h-screen flex-col overflow-hidden bg-background">
       <header>
         <NavBar />
       </header>
-      <main>
+      <main className="min-h-0 flex-1">
         {children}
       </main>
-      {/*<Header />
-      <main>
-      {children}
-      </main>
-      <Footer /> */}
+      <AppFooter />
     </div>
   )
 }

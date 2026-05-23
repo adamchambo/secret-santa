@@ -1,24 +1,23 @@
+import AppFooter from "@/src/shared/layout/app-footer";
 import Logo from "@/src/shared/ui/logo";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-col min-h-screen bg-background px-4">
-      <div className="flex-1 flex flex-col justify-center items-center ">
-        <header className="flex flex-col items-center text-primary font-bold m-4">
-          <div>
-            <Logo className="absolute top-3 z-10" />
+    <div className="flex min-h-screen flex-col bg-background px-4 text-text">
+      <div className="flex flex-1 flex-col items-center justify-center py-10">
+        <header className="mb-7 flex flex-col items-center gap-3 text-primary">
+          <div className="flex size-14 items-center justify-center rounded-2xl bg-surface shadow-sm">
+            <Logo />
           </div>
-          <h1 className="text-2xl">Secret Santa</h1>
+          <h1 className="font-heading text-2xl font-extrabold">Secret Santa</h1>
         </header>
 
-        <main className="w-full max-w-md rounded-md p-6 pb-10 mb-6 shadow bg-foreground">
+        <main className="mb-6 w-full max-w-lg rounded-lg border border-border bg-surface p-7 shadow-sm md:p-8">
           {children}
         </main>
       </div>
 
-      <footer className="text-center pb-4 pt-2 text-text-muted border-t border-border/60">
-        <p>© 2025 Adam Chamberlain</p>
-      </footer>
+      <AppFooter />
     </div>
   )
 }

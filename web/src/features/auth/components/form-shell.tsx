@@ -8,6 +8,7 @@ import {
 
 type FormShellProps<T extends FieldValues> = {
   title: string;
+  subtitle: string;
   handleSubmit: UseFormHandleSubmit<T>;
   onSubmit: SubmitHandler<T>;
   children?: React.ReactNode;
@@ -15,14 +16,24 @@ type FormShellProps<T extends FieldValues> = {
 
 export default function FormShell<T extends FieldValues>({
   title,
+  subtitle,
   handleSubmit,
   onSubmit,
   children,
 }: FormShellProps<T>) {
   return (
-    <div className="flex-col items-center p-2">
-      <h2 className="mx-auto text-center font-bold">{title}</h2>
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
+    <div>
+      <div className="mb-7">
+        <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-secondary">
+          Merry Christmas
+        </p>
+        <h2 className="mt-2 font-heading text-3xl font-extrabold text-primary">
+          {title}
+        </h2>
+        <p className="mt-2 text-sm leading-6 text-text-muted">{subtitle}</p>
+      </div>
+
+      <form className="flex flex-col gap-5" onSubmit={handleSubmit(onSubmit)}>
         {children}
       </form>
     </div>

@@ -48,7 +48,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       if (session?.user) await syncUser(session.user);
       else setUser(null);
     })
-
+      
     return () => sub.subscription.unsubscribe();
   }, [supabase]);
 

@@ -1,7 +1,5 @@
+import GroupsView from "@/src/features/groups/components/groups-view";
+
 export default function GroupsPage() {
-  return (
-    <div>
-      <h1>Groups</h1>
-    </div>
-  )
+  return <GroupsView />;
 }

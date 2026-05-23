@@ -7,6 +7,7 @@ import { loginUser } from "../api";
 import { useRouter } from "next/navigation";
 import ErrorText from "@/src/shared/ui/labels/error-text";
 import Link from "next/link";
+import { Lock, Mail } from "lucide-react";
 
 
 export default function LoginForm() {
@@ -38,48 +39,57 @@ export default function LoginForm() {
 
   return (
     <FormShell
-      title="Login"
+      title="Welcome back"
+      subtitle="Sign in to manage groups, gifts, and the important festive logistics."
       handleSubmit={handleSubmit}
       onSubmit={onSubmit}
     >
       <div className="flex flex-col gap-2">
-        <label htmlFor="email">Email Address</label>
-        <input
-          className="h-10 bg-background text-text-muted rounded-sm py-2 pl-2"
-          id="email"
-          type="email"
-          placeholder="bob-ross@email.com"
-          {...register("email", {
-            onChange: () => clearErrors("root"),
-          })}
-        ></input>
+        <label className="text-xs font-extrabold uppercase tracking-widest text-text" htmlFor="email">
+          Email Address
+        </label>
+        <div className="flex h-12 items-center gap-3 rounded-md border border-border bg-background px-4 focus-within:ring-2 focus-within:ring-primary">
+          <Mail size={18} className="shrink-0 text-text-muted" />
+          <input
+            className="min-w-0 flex-1 bg-transparent text-text outline-none placeholder:text-text-muted"
+            id="email"
+            type="email"
+            placeholder="bob-ross@email.com"
+            {...register("email", {
+              onChange: () => clearErrors("root"),
+            })}
+          />
+        </div>
         <ErrorText text={errors.email?.message || ""} />
       </div>
       <div className="flex flex-col gap-2">
-        <label>Password</label>
-        <input
-          className="h-10 bg-background text-text-muted rounded-sm pl-2"
-          id="password"
-          type="password"
-          placeholder="************"
-          {...register("password", {
-            onChange: () => clearErrors("root"),
-          })}
-        ></input>
+        <label className="text-xs font-extrabold uppercase tracking-widest text-text" htmlFor="password">
+          Password
+        </label>
+        <div className="flex h-12 items-center gap-3 rounded-md border border-border bg-background px-4 focus-within:ring-2 focus-within:ring-primary">
+          <Lock size={18} className="shrink-0 text-text-muted" />
+          <input
+            className="min-w-0 flex-1 bg-transparent text-text outline-none placeholder:text-text-muted"
+            id="password"
+            type="password"
+            placeholder="Enter your password"
+            {...register("password", {
+              onChange: () => clearErrors("root"),
+            })}
+          />
+        </div>
         <ErrorText text={errors.password?.message || ""} />
         <Link
-          className="text-center text-sm text-primary hover:underline"
+          className="self-end text-sm font-bold text-primary hover:underline"
           href="/forgot-password"
         >
           Forgot password?
         </Link>
       </div>
-        <button className="h-10 self-center mt-4 p-1 bg-primary rounded-md items-center hover:cursor-pointer text-white w-full">
+        <button className="mt-2 h-12 w-full cursor-pointer rounded-md bg-primary px-4 font-extrabold text-background shadow-sm hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60">
           {isSubmitting ? "Logging in..." : "Login"}
         </button>
         <ErrorText text={errors.root?.message || ""} />
     </FormShell>
-    // to do: bring the fields up to this layer
-    // to do: add forgot password link
   );
 }
