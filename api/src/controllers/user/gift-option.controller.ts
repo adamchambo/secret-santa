@@ -14,7 +14,7 @@ export async function getGiftOptions(req: Request, res: Response, next: NextFunc
 
 export async function getGiftOption(req: Request, res: Response, next: NextFunction) {
   try {
-    const { id } = req.params; 
+    const id = req.params.giftOptionId; 
     if (!id || typeof id !== "string") return res.status(404).json({ error: "Invalid resource id" }); 
     const giftoption = await findGiftOptionById(id); 
     return res.json(giftoption);
@@ -36,7 +36,7 @@ export async function createGiftOption(req: Request, res: Response, next: NextFu
 
 export async function updateGiftOption(req: Request, res: Response, next: NextFunction) {
   try {
-    const { id } = req.params; 
+    const id = req.params.giftOptionId; 
     if (!id || typeof id !== "string") return res.status(404).json({ error: "Invalid resource id" });  
     const data: UpdateGiftOptionDto = req.body;
     if (Object.keys(data).length === 0) 
@@ -50,7 +50,7 @@ export async function updateGiftOption(req: Request, res: Response, next: NextFu
 
 export async function deleteGiftOption(req: Request, res: Response, next: NextFunction) {
   try {
-    const { id } = req.params; 
+    const id = req.params.giftOptionId; 
     if (!id || typeof id !== "string") return res.status(404).json({ error: "Invalid resource id" });  
     await deleteGiftOptionById(id);
     return res.status(202).json({ message: "Successfully deleted gift option" }); 
@@ -58,4 +58,3 @@ export async function deleteGiftOption(req: Request, res: Response, next: NextFu
     throw err; 
   }
 }
-

@@ -6,7 +6,7 @@ import { getSettings, upsertSettings } from "@/controllers/user/settings.control
 import { requireAuth, requireOwner, requireResourceOwner } from "@/middleware/auth.middleware.js";
 import { findGiftOptionById } from "@/services/user/gift-option.service.js";
 
-export const userRouter = Router();
+export const userRouter: Router = Router();
 
 /**
  * @openapi

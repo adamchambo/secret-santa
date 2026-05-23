@@ -27,6 +27,11 @@ export async function createGroup(userId: string, data: CreateGroupDto) {
           const newGroup: Prisma.GroupCreateInput = {
             ...data, 
             admin: { connect: { id: userId }},
+            groupMembers: {
+              create: {
+                user: { connect: { id: userId } }
+              }
+            },
             inviteCode 
           }
           return await db.group.create({ data: newGroup }); 

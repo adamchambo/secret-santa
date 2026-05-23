@@ -8,6 +8,7 @@ import { errorHandler } from "./middleware/error.middleware.js";
 import appRouter from "./routes/app.route.js";
 import swaggerJSDoc from 'swagger-jsdoc';
 import { swaggerUi } from './utils/swagger-ui.js';
+import { attachGroupChatWebSocketServer } from "./realtime/group-chat.ws.js";
 
 const app = express(); 
 
@@ -42,6 +43,8 @@ app.use(errorHandler);
 
 
 /* ---------------- SERVER ---------------- */
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server listening on port: ${URL}:${PORT}`);
 });
+
+attachGroupChatWebSocketServer(server);

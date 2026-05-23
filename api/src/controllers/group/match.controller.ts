@@ -5,7 +5,7 @@ export async function getMatches(req: Request, res: Response, next: NextFunction
   try {
     const groupId = req.params.groupId;
     if (!groupId || typeof groupId !== "string") return res.status(404).json({ error: "Request doesn't have a valid group id" });
-    const matches = findMatchesByGroupId(groupId);
+    const matches = await findMatchesByGroupId(groupId);
     return res.json(matches);
   } catch (err) {
     next(err);

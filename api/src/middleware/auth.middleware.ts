@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { jwtVerify, createRemoteJWKSet, JWTPayload } from "jose";
 import "dotenv"; 
+import { findGroupById } from "@/services/group/group.service.js";
 import { findGroupMemberByUserId } from "@/services/group/group-member.service.js";
 
 declare global {
@@ -68,9 +69,17 @@ export async function requireGroupMember(req: Request, res: Response, next: Next
 }
 
 /* ---------------- ADMIN BOUNDARY ---------------- */
-export function requireGroupAdmin(req: Request, res: Response, next: NextFunction) {
-  if (!req.user?.sub) return res.status(403).json({error: "Unauthorised access"}); // not needed
-  const uid = req.user.sub;
-  if (uid !== req.params.adminId) return res.status(403).json({ error: "Forbidden" });
-  next();
+export async function requireGroupAdmin(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = req.user?.sub;
+    const groupId = req.params.groupId;
+    if (!userId || !groupId || typeof groupId !== "string") return res.status(403).json({ error: "Forbidden" });
+
+    const group = await findGroupById(groupId);
+    if (group.adminId !== userId) return res.status(403).json({ error: "Forbidden" });
+
+    next();
+  } catch (err) {
+    next(err);
+  }
 }

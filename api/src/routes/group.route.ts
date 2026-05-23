@@ -38,7 +38,7 @@ import {
 } from "@/middleware/auth.middleware.js";
 import { findMessageById } from "@/services/group/message.service.js";
 
-export const groupRouter = Router();
+export const groupRouter: Router = Router();
 groupRouter.use(requireAuth);
 
 /**
@@ -245,7 +245,7 @@ groupRouter.get("/", getGroups); // use query param
  *       404:
  *         description: Invalid group id
  */
-groupRouter.get("/:groupId", getGroup);
+groupRouter.get("/:groupId", requireGroupMember, getGroup);
 /**
  * @openapi
  * /groups:
@@ -358,7 +358,7 @@ const messageRouter = Router({ mergeParams: true });
  *               items:
  *                 $ref: '#/components/schemas/GroupMember'
  */
-memberRouter.get("/", getGroupMembers);
+memberRouter.get("/", requireGroupMember, getGroupMembers);
 /**
  * @openapi
  * /groups/{groupId}/members:
@@ -388,7 +388,7 @@ memberRouter.get("/", getGroupMembers);
  *             schema:
  *               $ref: '#/components/schemas/GroupMember'
  */
-memberRouter.post("/", createGroupMember);
+memberRouter.post("/", requireGroupAdmin, createGroupMember);
 /**
  * @openapi
  * /groups/{groupId}/members/{memberId}:
@@ -424,7 +424,7 @@ memberRouter.post("/", createGroupMember);
  *             schema:
  *               $ref: '#/components/schemas/GroupMember'
  */
-memberRouter.put("/:memberId", updateGroupMember);
+memberRouter.put("/:memberId", requireGroupAdmin, updateGroupMember);
 /**
  * @openapi
  * /groups/{groupId}/members/{memberId}:
@@ -450,7 +450,7 @@ memberRouter.put("/:memberId", updateGroupMember);
  *       204:
  *         description: Group member removed
  */
-memberRouter.delete("/:memberId", deleteGroupMember);
+memberRouter.delete("/:memberId", requireGroupAdmin, deleteGroupMember);
 
 /* ---------------- FAMILY ROUTES ---------------- */
 /**
@@ -478,7 +478,7 @@ memberRouter.delete("/:memberId", deleteGroupMember);
  *               items:
  *                 $ref: '#/components/schemas/Family'
  */
-familyRouter.get("/", getFamilies);
+familyRouter.get("/", requireGroupMember, getFamilies);
 /**
  * @openapi
  * /groups/{groupId}/families:
@@ -600,7 +600,7 @@ familyRouter.delete("/:familyId", requireGroupAdmin, deleteFamily);
  *               items:
  *                 $ref: '#/components/schemas/Match'
  */
-matchRouter.get("/", getMatches);
+matchRouter.get("/", requireGroupMember, getMatches);
 /**
  * @openapi
  * /groups/{groupId}/matches:

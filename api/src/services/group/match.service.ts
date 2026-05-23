@@ -13,12 +13,13 @@ export async function createMatchesByGroupId(groupId: string) {
     await deleteMatchesByGroupId(groupId); 
     const groupMembers = await findGroupMembersByGroupId(groupId);
     const matches = generateMatches(groupMembers); 
-    return await db.match.createMany({
+    await db.match.createMany({
       data: matches.map(m => ({
         groupId,
         ...m
       }))
     });
+    return await findMatchesByGroupId(groupId);
   } catch (err) {
     throw err; 
   }
