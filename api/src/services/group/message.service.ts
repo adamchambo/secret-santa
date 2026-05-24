@@ -16,9 +16,12 @@ export async function findMessagesByGroupId(groupId: string) {
       chat: {
         groupId,
       },
-      orderBy: {
-        createdAt: "asc",
-      },
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+    include: {
+      senderUser: true,
     },
   });
 }

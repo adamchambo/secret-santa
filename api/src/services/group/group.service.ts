@@ -32,6 +32,7 @@ export async function createGroup(userId: string, data: CreateGroupDto) {
                 user: { connect: { id: userId } }
               }
             },
+            chat: { create: {} },
             inviteCode 
           }
           return await db.group.create({ data: newGroup }); 

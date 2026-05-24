@@ -24,6 +24,12 @@ import {
   getMatches,
 } from "../controllers/group/match.controller.js";
 import {
+  acceptJoinRequest,
+  createJoinRequest,
+  declineJoinRequest,
+  getJoinRequests,
+} from "../controllers/group/join-request.controller.js";
+import {
   createMessage,
   deleteMessage,
   editMessage,
@@ -220,6 +226,7 @@ groupRouter.use(requireAuth);
  *         description: Missing or invalid auth token
  */
 groupRouter.get("/", getGroups); // use query param
+groupRouter.post("/join-requests", createJoinRequest);
 /**
  * @openapi
  * /groups/{groupId}:
@@ -325,6 +332,9 @@ groupRouter.put("/:groupId", requireGroupAdmin, updateGroup);
  *         description: Authenticated user is not the group admin
  */
 groupRouter.delete("/:groupId", requireGroupAdmin, deleteGroup);
+groupRouter.get("/:groupId/join-requests", requireGroupAdmin, getJoinRequests);
+groupRouter.post("/:groupId/join-requests/:requestId/accept", requireGroupAdmin, acceptJoinRequest);
+groupRouter.delete("/:groupId/join-requests/:requestId", requireGroupAdmin, declineJoinRequest);
 
 /* ---------------- CHILD ROUTERS ---------------- */
 const memberRouter = Router({ mergeParams: true });

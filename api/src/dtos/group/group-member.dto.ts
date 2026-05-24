@@ -4,7 +4,7 @@ export type CreateGroupMemberDto = {
 }
 
 export type UpdateGroupMemberDto = {
-  familyId?: string;
+  familyId?: string | null;
   
 }
 

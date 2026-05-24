@@ -14,7 +14,12 @@ export async function findGroupMemberByUserId(userId: string, groupId: string) {
 
 export async function findGroupMembersByGroupId(groupId: string) {
   return await db.groupMember.findMany({
-    where: { groupId }
+    where: { groupId },
+    include: {
+      user: true,
+      family: true,
+    },
+    orderBy: { joinedAt: "asc" },
   });
 }
 
