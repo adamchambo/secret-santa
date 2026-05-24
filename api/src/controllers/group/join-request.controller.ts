@@ -9,7 +9,7 @@ import { NextFunction, Request, Response } from "express";
 export async function createJoinRequest(req: Request, res: Response, next: NextFunction) {
   try {
     const userId = req.user!.sub;
-    const inviteCode = String(req.body.inviteCode ?? "").trim();
+    const inviteCode = String(req.body.inviteCode ?? "").trim().toUpperCase();
     if (!inviteCode) return res.status(400).json({ error: "Invite code is required" });
 
     const result = await createJoinRequestByInviteCode(userId, inviteCode);

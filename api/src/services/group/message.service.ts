@@ -32,11 +32,22 @@ export async function createMessageByGroupId(
   groupId: string,
   data: CreateMessageDto,
 ) {
+  const chat = await db.chat.upsert({
+    where: { groupId },
+    update: {},
+    create: {
+      group: { connect: { id: groupId } },
+    },
+  });
+
   return await db.message.create({
     data: {
-      chat: { connect: { groupId } },
+      chat: { connect: { id: chat.id } },
       senderUser: { connect: { id: userId } },
       content: data.content,
+    },
+    include: {
+      senderUser: true,
     },
   });
 }

@@ -1,8 +1,9 @@
 import { db } from "@/clients/prisma.js";
 
 export async function findGroupByInviteCode(inviteCode: string) {
+  const normalisedInviteCode = inviteCode.trim().toUpperCase();
   return db.group.findUnique({
-    where: { inviteCode },
+    where: { inviteCode: normalisedInviteCode },
   });
 }
 

@@ -4,26 +4,46 @@ import { Prisma } from "@db/generated/prisma/client.js";
 import { nanoid } from "nanoid";
 
 export async function findGroupsByUserId(userId: string) {
-  return await db.group.findMany({
+  const groups = await db.group.findMany({
     where: {
       groupMembers: {
         some: { userId }
       }
-    }
-  })
+    },
+    include: {
+      _count: {
+        select: { matches: true },
+      },
+    },
+  });
+
+  return groups.map(({ _count, ...group }) => ({
+    ...group,
+    isLocked: group.isLocked || _count.matches > 0,
+  }));
 }
 
 export async function findGroupById(id: string) {
-  return await db.group.findUniqueOrThrow({
-      where: { id }
-    })
+  const { _count, ...group } = await db.group.findUniqueOrThrow({
+    where: { id },
+    include: {
+      _count: {
+        select: { matches: true },
+      },
+    },
+  });
+
+  return {
+    ...group,
+    isLocked: group.isLocked || _count.matches > 0,
+  };
 }
 
 export async function createGroup(userId: string, data: CreateGroupDto) {
   try {
       while (true) {
         try {
-          const inviteCode = nanoid(8); 
+          const inviteCode = nanoid(8).toUpperCase(); 
           const newGroup: Prisma.GroupCreateInput = {
             ...data, 
             admin: { connect: { id: userId }},
