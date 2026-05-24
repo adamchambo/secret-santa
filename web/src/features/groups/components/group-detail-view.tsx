@@ -81,6 +81,10 @@ type ApiMessage = {
   };
 };
 
+type ActionStatus = "idle" | "loading" | "success" | "error";
+
+const MATCH_REVEAL_STORAGE_KEY = "secret-santa.revealed-matches";
+
 function getInitials(name: string) {
   return name
     .split(" ")
@@ -90,17 +94,96 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
+function getMatchSignature(matches: Match[]) {
+  return matches
+    .map((match) => `${match.givingUserId}:${match.receivingUserId}`)
+    .sort()
+    .join("|");
+}
+
+function readRevealedMatchSignatures() {
+  if (typeof window === "undefined") return {};
+
+  try {
+    return JSON.parse(window.localStorage.getItem(MATCH_REVEAL_STORAGE_KEY) ?? "{}") as Record<
+      string,
+      string
+    >;
+  } catch {
+    return {};
+  }
+}
+
+function storeRevealedMatchSignature(groupId: string, signature: string) {
+  if (typeof window === "undefined" || !signature) return;
+
+  const revealedMatches = readRevealedMatchSignatures();
+  window.localStorage.setItem(
+    MATCH_REVEAL_STORAGE_KEY,
+    JSON.stringify({ ...revealedMatches, [groupId]: signature }),
+  );
+}
+
+function clearRevealedMatchSignature(groupId: string) {
+  if (typeof window === "undefined") return;
+
+  const revealedMatches = readRevealedMatchSignatures();
+  delete revealedMatches[groupId];
+  window.localStorage.setItem(
+    MATCH_REVEAL_STORAGE_KEY,
+    JSON.stringify(revealedMatches),
+  );
+}
+
+function getChatMessageKey(message: ApiMessage) {
+  return (
+    message.id ??
+    `${message.senderUserId ?? message.author}-${message.createdAt ?? message.time}-${
+      message.content ?? message.text
+    }`
+  );
+}
+
+function mergeChatMessages(currentMessages: ApiMessage[], incomingMessages: ApiMessage[]) {
+  const messagesByKey = new Map<string, ApiMessage>();
+
+  [...currentMessages, ...incomingMessages].forEach((message) => {
+    messagesByKey.set(getChatMessageKey(message), message);
+  });
+
+  return Array.from(messagesByKey.values()).sort((firstMessage, secondMessage) => {
+    if (!firstMessage.createdAt || !secondMessage.createdAt) return 0;
+    return (
+      new Date(firstMessage.createdAt).getTime() -
+      new Date(secondMessage.createdAt).getTime()
+    );
+  });
+}
+
 async function apiFetch<T>(path: string, init: RequestInit = {}) {
-  const authOptions = await getAuthOptions({ forceRefresh: true });
-  const response = await fetch(`http://localhost:5001/api${path}`, {
-    ...authOptions,
+  const authOptions = await getAuthOptions();
+  const requestInit = {
     ...init,
+    cache: "no-store" as RequestCache,
     headers: {
       ...(init.body ? { "Content-Type": "application/json" } : {}),
       ...authOptions.headers,
       ...init.headers,
     },
-  });
+  };
+  let response = await fetch(`http://localhost:5001/api${path}`, requestInit);
+
+  if (response.status === 401) {
+    const refreshedAuthOptions = await getAuthOptions({ forceRefresh: true });
+    response = await fetch(`http://localhost:5001/api${path}`, {
+      ...requestInit,
+      headers: {
+        ...requestInit.headers,
+        ...refreshedAuthOptions.headers,
+      },
+    });
+  }
+
   const text = await response.text();
   const payload = text ? JSON.parse(text) : null;
   if (!response.ok) {
@@ -137,19 +220,49 @@ export default function GroupDetailView() {
   const [inviteCopyStatus, setInviteCopyStatus] = useState<
     "idle" | "copied" | "failed"
   >("idle");
+  const [actionMessage, setActionMessage] = useState("");
+  const [deleteStatus, setDeleteStatus] = useState<ActionStatus>("idle");
+  const [rerollStatus, setRerollStatus] = useState<ActionStatus>("idle");
+  const [saveStatus, setSaveStatus] = useState<ActionStatus>("idle");
+  const [familyStatus, setFamilyStatus] = useState<ActionStatus>("idle");
+  const [activeRequestId, setActiveRequestId] = useState("");
+  const [activeRequestAction, setActiveRequestAction] = useState<
+    "accept" | "decline" | ""
+  >("");
   const [socketStatus, setSocketStatus] = useState<"connecting" | "open" | "closed">(
     "connecting",
   );
 
+  function showActionFeedback(message: string, status: "success" | "error") {
+    setActionMessage(message);
+    window.setTimeout(() => {
+      setActionMessage("");
+      if (status === "success") {
+        setDeleteStatus("idle");
+        setRerollStatus("idle");
+        setSaveStatus("idle");
+        setFamilyStatus("idle");
+      }
+    }, 2400);
+  }
+
+  const loadChatMessages = useCallback(async () => {
+    const response = await apiFetch<ApiMessage[]>(
+      `/groups/${params.groupId}/chat/messages`,
+    ).catch(() => []);
+
+    return Array.isArray(response) ? response : [];
+  }, [params.groupId]);
+
   const loadGroupData = useCallback(async () => {
-    const options = await getAuthOptions({ forceRefresh: true });
+    const options = await getAuthOptions();
     const [groupResponse, memberResponse, familyResponse, matchResponse, messageResponse] =
       await Promise.all([
         getGroupsGroupId(params.groupId, options),
         apiFetch<ApiMember[]>(`/groups/${params.groupId}/members`),
         getGroupsGroupIdFamilies(params.groupId, options).catch(() => []),
         getGroupsGroupIdMatches(params.groupId, options).catch(() => []),
-        apiFetch<ApiMessage[]>(`/groups/${params.groupId}/chat/messages`).catch(() => []),
+        loadChatMessages(),
       ]);
 
     setGroup(groupResponse as ApiGroup);
@@ -157,7 +270,7 @@ export default function GroupDetailView() {
     setFamilies(Array.isArray(familyResponse) ? familyResponse : []);
     setMatches(Array.isArray(matchResponse) ? matchResponse : []);
     setChatMessages(Array.isArray(messageResponse) ? messageResponse : []);
-  }, [params.groupId]);
+  }, [loadChatMessages, params.groupId]);
 
   useEffect(() => {
     let isActive = true;
@@ -190,7 +303,7 @@ export default function GroupDetailView() {
     socket.onerror = () => setSocketStatus("closed");
     socket.onmessage = (event) => {
       const incomingMessage = JSON.parse(event.data) as ApiMessage;
-      setChatMessages((messages) => [...messages, incomingMessage]);
+      setChatMessages((messages) => mergeChatMessages(messages, [incomingMessage]));
     };
 
     return () => {
@@ -200,12 +313,62 @@ export default function GroupDetailView() {
   }, [params.groupId]);
 
   useEffect(() => {
+    let isActive = true;
+
+    async function refreshChatMessages() {
+      await Promise.resolve();
+      const nextMessages = await loadChatMessages();
+      if (isActive) {
+        setChatMessages((messages) => mergeChatMessages(messages, nextMessages));
+      }
+    }
+
+    const refreshOnFocus = () => {
+      void refreshChatMessages();
+    };
+    const refreshOnVisible = () => {
+      if (document.visibilityState === "visible") void refreshChatMessages();
+    };
+    const intervalId = window.setInterval(() => {
+      void refreshChatMessages();
+    }, 1500);
+
+    window.addEventListener("focus", refreshOnFocus);
+    document.addEventListener("visibilitychange", refreshOnVisible);
+
+    return () => {
+      isActive = false;
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refreshOnFocus);
+      document.removeEventListener("visibilitychange", refreshOnVisible);
+    };
+  }, [loadChatMessages]);
+
+  useEffect(() => {
     return () => {
       if (inviteFeedbackTimeoutRef.current) {
         window.clearTimeout(inviteFeedbackTimeoutRef.current);
       }
     };
   }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function syncRevealedMatchState() {
+      await Promise.resolve();
+      if (!isActive) return;
+
+      const signature = getMatchSignature(matches);
+      const storedSignature = readRevealedMatchSignatures()[params.groupId];
+      setIsMatchRevealed(Boolean(signature) && storedSignature === signature);
+    }
+
+    syncRevealedMatchState();
+    return () => {
+      isActive = false;
+    };
+  }, [matches, params.groupId]);
 
   useEffect(() => {
     async function loadJoinRequests() {
@@ -239,51 +402,90 @@ export default function GroupDetailView() {
   }
 
   async function assignFamily(memberId: string, familyName: string) {
-    const familyId = families.find((family) => family.name === familyName)?.id ?? null;
-    await putGroupsGroupIdMembersMemberId(
-      params.groupId,
-      memberId,
-      { familyId } as Parameters<typeof putGroupsGroupIdMembersMemberId>[2],
-      await getAuthOptions({ forceRefresh: true }),
-    );
-    await loadGroupData();
+    setFamilyStatus("loading");
+    setActionMessage("");
+    try {
+      const familyId = families.find((family) => family.name === familyName)?.id ?? null;
+      await putGroupsGroupIdMembersMemberId(
+        params.groupId,
+        memberId,
+        { familyId } as Parameters<typeof putGroupsGroupIdMembersMemberId>[2],
+        await getAuthOptions({ forceRefresh: true }),
+      );
+      await loadGroupData();
+      setFamilyStatus("success");
+      showActionFeedback("Family assignment saved.", "success");
+    } catch {
+      setFamilyStatus("error");
+      showActionFeedback("Could not save family assignment.", "error");
+    }
   }
 
   async function addFamily(familyName: string, participantEmails: string[]) {
-    const family = await postGroupsGroupIdFamilies(
-      params.groupId,
-      { name: familyName },
-      await getAuthOptions({ forceRefresh: true }),
-    );
-    const authOptions = await getAuthOptions({ forceRefresh: true });
+    setFamilyStatus("loading");
+    setActionMessage("");
+    try {
+      const family = await postGroupsGroupIdFamilies(
+        params.groupId,
+        { name: familyName },
+        await getAuthOptions({ forceRefresh: true }),
+      );
+      const authOptions = await getAuthOptions({ forceRefresh: true });
 
-    await Promise.all(
-      members
-        .filter((member) => participantEmails.includes(member.user?.email ?? ""))
-        .map((member) =>
-          putGroupsGroupIdMembersMemberId(
-            params.groupId,
-            member.id,
-            { familyId: family.id },
-            authOptions,
+      await Promise.all(
+        members
+          .filter((member) => participantEmails.includes(member.user?.email ?? ""))
+          .map((member) =>
+            putGroupsGroupIdMembersMemberId(
+              params.groupId,
+              member.id,
+              { familyId: family.id },
+              authOptions,
+            ),
           ),
-        ),
-    );
-    await loadGroupData();
+      );
+      await loadGroupData();
+      setFamilyStatus("success");
+      showActionFeedback("Family added.", "success");
+    } catch {
+      setFamilyStatus("error");
+      showActionFeedback("Could not add family.", "error");
+    }
   }
 
   async function rerollMatches() {
-    const nextMatches = await postGroupsGroupIdMatches(
-      params.groupId,
-      await getAuthOptions({ forceRefresh: true }),
-    );
-    setMatches(Array.isArray(nextMatches) ? nextMatches : []);
-    setIsMatchRevealed(false);
+    setRerollStatus("loading");
+    setActionMessage("");
+    try {
+      const nextMatches = await postGroupsGroupIdMatches(
+        params.groupId,
+        await getAuthOptions({ forceRefresh: true }),
+      );
+      clearRevealedMatchSignature(params.groupId);
+      setMatches(Array.isArray(nextMatches) ? nextMatches : []);
+      setGroup((currentGroup) =>
+        currentGroup ? { ...currentGroup, isLocked: true } : currentGroup,
+      );
+      setIsMatchRevealed(false);
+      setRerollStatus("success");
+      showActionFeedback("Matches rerolled.", "success");
+    } catch {
+      setRerollStatus("error");
+      showActionFeedback("Could not reroll matches.", "error");
+    }
   }
 
   async function deleteGroup() {
-    await deleteGroupsGroupId(params.groupId, await getAuthOptions({ forceRefresh: true }));
-    router.push("/groups");
+    setDeleteStatus("loading");
+    setActionMessage("");
+    try {
+      await deleteGroupsGroupId(params.groupId, await getAuthOptions({ forceRefresh: true }));
+      setDeleteStatus("success");
+      router.push("/groups");
+    } catch {
+      setDeleteStatus("error");
+      showActionFeedback("Could not delete group.", "error");
+    }
   }
 
   function startEditingGroup() {
@@ -302,76 +504,103 @@ export default function GroupDetailView() {
   async function saveGroupDetails() {
     if (!group) return;
 
-    const updatedGroup = await putGroupsGroupId(
-      group.id,
-      {
-        name: editGroupForm.name.trim() || group.name,
-        eventDate: editGroupForm.eventDate
-          ? new Date(`${editGroupForm.eventDate}T00:00:00`).toISOString()
-          : undefined,
-        budgetLimit: Number(editGroupForm.budgetLimit) || undefined,
-        location: editGroupForm.location.trim() || undefined,
-        description: editGroupForm.description,
-      } as Parameters<typeof putGroupsGroupId>[1],
-      await getAuthOptions({ forceRefresh: true }),
-    );
-    setGroup(updatedGroup as ApiGroup);
-    setIsEditingGroup(false);
+    setSaveStatus("loading");
+    setActionMessage("");
+    try {
+      const updatedGroup = await putGroupsGroupId(
+        group.id,
+        {
+          name: editGroupForm.name.trim() || group.name,
+          eventDate: editGroupForm.eventDate
+            ? new Date(`${editGroupForm.eventDate}T00:00:00`).toISOString()
+            : undefined,
+          budgetLimit: Number(editGroupForm.budgetLimit) || undefined,
+          location: editGroupForm.location.trim() || undefined,
+          description: editGroupForm.description,
+        } as Parameters<typeof putGroupsGroupId>[1],
+        await getAuthOptions({ forceRefresh: true }),
+      );
+      setGroup(updatedGroup as ApiGroup);
+      setIsEditingGroup(false);
+      setSaveStatus("success");
+      showActionFeedback("Group details saved.", "success");
+    } catch {
+      setSaveStatus("error");
+      showActionFeedback("Could not save group details.", "error");
+    }
   }
 
   function revealMatch() {
     setIsMatchRevealing(true);
     setIsMatchRevealed(false);
     window.setTimeout(() => {
+      storeRevealedMatchSignature(params.groupId, getMatchSignature(matches));
       setIsMatchRevealing(false);
       setIsMatchRevealed(true);
     }, 900);
   }
 
   async function acceptJoinRequest(requestId: string) {
-    await apiFetch(`/groups/${params.groupId}/join-requests/${requestId}/accept`, {
-      method: "POST",
-    });
-    setJoinRequests((requests) =>
-      requests.filter((request) => request.id !== requestId),
-    );
-    await loadGroupData();
+    setActiveRequestId(requestId);
+    setActiveRequestAction("accept");
+    setActionMessage("");
+    try {
+      await apiFetch(`/groups/${params.groupId}/join-requests/${requestId}/accept`, {
+        method: "POST",
+      });
+      setJoinRequests((requests) =>
+        requests.filter((request) => request.id !== requestId),
+      );
+      await loadGroupData();
+      showActionFeedback("Join request accepted.", "success");
+    } catch {
+      showActionFeedback("Could not accept join request.", "error");
+    } finally {
+      setActiveRequestId("");
+      setActiveRequestAction("");
+    }
   }
 
   async function declineJoinRequest(requestId: string) {
-    await apiFetch(`/groups/${params.groupId}/join-requests/${requestId}`, {
-      method: "DELETE",
-    });
-    setJoinRequests((requests) =>
-      requests.filter((request) => request.id !== requestId),
-    );
+    setActiveRequestId(requestId);
+    setActiveRequestAction("decline");
+    setActionMessage("");
+    try {
+      await apiFetch(`/groups/${params.groupId}/join-requests/${requestId}`, {
+        method: "DELETE",
+      });
+      setJoinRequests((requests) =>
+        requests.filter((request) => request.id !== requestId),
+      );
+      showActionFeedback("Join request declined.", "success");
+    } catch {
+      showActionFeedback("Could not decline join request.", "error");
+    } finally {
+      setActiveRequestId("");
+      setActiveRequestAction("");
+    }
   }
 
   async function sendMessage() {
     const text = message.trim();
     if (!group || !text) return;
 
-    const outgoingMessage: ApiMessage = {
-      author: "Me",
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      text,
-      tone: "self",
-    };
-
-    if (socketRef.current?.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify(outgoingMessage));
-    } else {
+    try {
       const createdMessage = await apiFetch<ApiMessage>(
         `/groups/${group.id}/chat/messages`,
         { method: "POST", body: JSON.stringify({ content: text }) },
       );
-      setChatMessages((messages) => [...messages, createdMessage]);
-    }
 
-    setMessage("");
+      setChatMessages((messages) => mergeChatMessages(messages, [createdMessage]));
+
+      if (socketRef.current?.readyState === WebSocket.OPEN) {
+        socketRef.current.send(JSON.stringify(createdMessage));
+      }
+
+      setMessage("");
+    } catch {
+      showActionFeedback("Could not send message.", "error");
+    }
   }
 
   if (!group) {
@@ -406,6 +635,7 @@ export default function GroupDetailView() {
   const myMatchName =
     myMatchMember?.user?.displayName || myMatchMember?.user?.email || "No match yet";
   const chatConnectionStatus = socketStatus;
+  const matchActionLabel = matches.length ? "Reroll Matches" : "Generate Matches";
 
   return (
     <>
@@ -495,23 +725,40 @@ export default function GroupDetailView() {
                     Add Family
                   </button>
                   <button
-                    className="inline-flex h-11 cursor-pointer items-center gap-3 rounded border border-border px-4 font-bold hover:bg-surface"
+                    className="inline-flex h-11 cursor-pointer items-center gap-3 rounded border border-border px-4 font-bold hover:bg-surface disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={rerollStatus === "loading"}
                     onClick={rerollMatches}
                   >
-                    <RefreshCw size={18} />
-                    Reroll Matches
+                    <RefreshCw
+                      size={18}
+                      className={rerollStatus === "loading" ? "animate-spin" : ""}
+                    />
+                    {rerollStatus === "loading" ? "Generating..." : matchActionLabel}
                   </button>
                   <button
-                    className="inline-flex h-11 cursor-pointer items-center gap-3 rounded border border-secondary/50 px-4 font-bold text-secondary hover:bg-tertiary"
+                    className="inline-flex h-11 cursor-pointer items-center gap-3 rounded border border-secondary/50 px-4 font-bold text-secondary hover:bg-tertiary disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={deleteStatus === "loading"}
                     onClick={deleteGroup}
                   >
                     <Trash2 size={18} />
-                    Delete Group
+                    {deleteStatus === "loading" ? "Deleting..." : "Delete Group"}
                   </button>
                 </>
               ) : null}
             </div>
           </div>
+
+          {actionMessage ? (
+            <div
+              className={
+                actionMessage.startsWith("Could not")
+                  ? "mb-6 rounded border border-secondary/40 bg-tertiary px-4 py-3 font-bold text-secondary"
+                  : "mb-6 rounded border border-primary/30 bg-primary/20 px-4 py-3 font-bold text-primary"
+              }
+            >
+              {actionMessage}
+            </div>
+          ) : null}
 
           {isEditingGroup ? (
             <section className="mb-6 rounded-lg bg-surface p-5">
@@ -614,10 +861,11 @@ export default function GroupDetailView() {
 
               <div className="mt-5 flex justify-end">
                 <button
-                  className="h-11 cursor-pointer rounded bg-primary px-6 font-extrabold text-background hover:opacity-90"
+                  className="h-11 cursor-pointer rounded bg-primary px-6 font-extrabold text-background hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={saveStatus === "loading"}
                   onClick={saveGroupDetails}
                 >
-                  Save Details
+                  {saveStatus === "loading" ? "Saving..." : "Save Details"}
                 </button>
               </div>
             </section>
@@ -650,16 +898,30 @@ export default function GroupDetailView() {
                         <p className="text-sm text-text-muted">{request.user.email}</p>
                       </div>
                       <button
-                        className="h-10 cursor-pointer rounded bg-primary px-4 font-extrabold text-background hover:opacity-90"
+                        className="h-10 cursor-pointer rounded bg-primary px-4 font-extrabold text-background hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                        disabled={
+                          activeRequestId === request.id &&
+                          activeRequestAction === "accept"
+                        }
                         onClick={() => acceptJoinRequest(request.id)}
                       >
-                        Accept
+                        {activeRequestId === request.id &&
+                        activeRequestAction === "accept"
+                          ? "Accepting..."
+                          : "Accept"}
                       </button>
                       <button
-                        className="h-10 cursor-pointer rounded border border-border px-4 font-extrabold text-text hover:bg-tertiary"
+                        className="h-10 cursor-pointer rounded border border-border px-4 font-extrabold text-text hover:bg-tertiary disabled:cursor-not-allowed disabled:opacity-60"
+                        disabled={
+                          activeRequestId === request.id &&
+                          activeRequestAction === "decline"
+                        }
                         onClick={() => declineJoinRequest(request.id)}
                       >
-                        Decline
+                        {activeRequestId === request.id &&
+                        activeRequestAction === "decline"
+                          ? "Declining..."
+                          : "Decline"}
                       </button>
                     </div>
                   );
@@ -774,7 +1036,7 @@ export default function GroupDetailView() {
                             ? "h-9 cursor-pointer appearance-none rounded-xl bg-border px-4 pr-9 text-xs font-bold uppercase tracking-widest text-text outline-none hover:bg-tertiary"
                             : "h-9 cursor-pointer appearance-none rounded-xl bg-primary/20 px-4 pr-9 text-xs font-bold uppercase tracking-widest text-primary outline-none hover:bg-tertiary"
                         }
-                        disabled={!isAdmin}
+                        disabled={!isAdmin || familyStatus === "loading"}
                         onChange={(event) => assignFamily(member.id, event.target.value)}
                         value={familyName}
                       >

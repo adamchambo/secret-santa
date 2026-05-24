@@ -22,7 +22,7 @@ export default function JoinGroupView() {
 
   async function requestToJoin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const code = inviteCode.trim().toUpperCase();
+    const code = inviteCode.trim();
     if (!user) return;
 
     try {
@@ -94,7 +94,7 @@ export default function JoinGroupView() {
               <input
                 className="min-w-0 flex-1 bg-transparent font-bold uppercase tracking-widest text-text outline-none placeholder:text-text-muted"
                 onChange={(event) => {
-                  setInviteCode(event.target.value);
+                  setInviteCode(event.target.value.trim());
                   setJoinStatus("idle");
                   setJoinMessage("");
                 }}

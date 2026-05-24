@@ -2,35 +2,57 @@
 
 import Link from "next/link";
 import { LogIn, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getAuthOptions } from "@/src/lib/api/auth-options";
 import { getGroups, Group } from "@/src/lib/api/generated/client";
 
 export default function GroupsView() {
   const [groups, setGroups] = useState<Group[]>([]);
+  const tabletPlaceholderCount = groups.length > 0 ? (2 - (groups.length % 2)) % 2 : 0;
+  const desktopPlaceholderCount = groups.length > 0 ? (3 - (groups.length % 3)) % 3 : 0;
+  const placeholderCount = Math.max(tabletPlaceholderCount, desktopPlaceholderCount);
+
+  const loadGroups = useCallback(async () => {
+    const response = await getGroups(await getAuthOptions()).catch(
+      () => [],
+    );
+    return Array.isArray(response) ? response : [];
+  }, []);
 
   useEffect(() => {
     let isActive = true;
 
-    async function loadGroups() {
+    async function refreshGroups() {
       await Promise.resolve();
-      const response = await getGroups(await getAuthOptions({ forceRefresh: true })).catch(
-        () => [],
-      );
       if (!isActive) return;
-      setGroups(Array.isArray(response) ? response : []);
+      const nextGroups = await loadGroups();
+      if (isActive) setGroups(nextGroups);
     }
 
-    loadGroups();
+    refreshGroups();
+
+    const refreshOnFocus = () => {
+      void refreshGroups();
+    };
+    const refreshOnVisible = () => {
+      if (document.visibilityState === "visible") void refreshGroups();
+    };
+    const intervalId = window.setInterval(refreshGroups, 1500);
+
+    window.addEventListener("focus", refreshOnFocus);
+    document.addEventListener("visibilitychange", refreshOnVisible);
 
     return () => {
       isActive = false;
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refreshOnFocus);
+      document.removeEventListener("visibilitychange", refreshOnVisible);
     };
-  }, []);
+  }, [loadGroups]);
 
   return (
     <section className="flex h-full flex-col overflow-hidden bg-background px-6 py-8 text-text md:px-[8vw] lg:px-[10vw]">
-      <div className="mb-8 flex w-full max-w-6xl flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mx-auto mb-8 flex w-full max-w-6xl flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-heading text-3xl font-extrabold text-primary">
             Active Groups
@@ -70,14 +92,20 @@ export default function GroupsView() {
           </div>
         </div>
       ) : (
-        <ul className="grid min-h-0 w-full max-w-6xl flex-1 grid-cols-1 gap-6 overflow-y-auto pr-2 md:grid-cols-2 xl:grid-cols-3">
+        <ul className="mx-auto grid min-h-0 w-full max-w-6xl auto-rows-max grid-cols-1 gap-6 overflow-y-auto pr-2 md:grid-cols-2 xl:grid-cols-3">
           {groups.map((group) => (
             <li
               key={group.id}
-              className="min-h-60 rounded-lg border-l-4 border-secondary bg-neutral px-5 py-5 shadow-sm"
+              className="flex h-72 flex-col rounded-lg border-l-4 border-secondary bg-neutral px-5 py-6 shadow-sm"
             >
               <div className="mb-5 flex items-start justify-between gap-4">
-              <span className="rounded-sm bg-tertiary px-3 py-1 text-xs font-bold uppercase tracking-widest text-text">
+              <span
+                className={
+                  group.isLocked
+                    ? "rounded-sm bg-primary/25 px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary"
+                    : "rounded-sm bg-tertiary px-3 py-1 text-xs font-bold uppercase tracking-widest text-text"
+                }
+              >
                 {group.isLocked ? "matched" : "pending"}
               </span>
                 <span className="text-base font-bold text-text">#{group.inviteCode}</span>
@@ -106,13 +134,41 @@ export default function GroupsView() {
               </div>
 
               <Link
-                className="mt-6 flex h-11 w-full cursor-pointer items-center justify-center rounded bg-border text-base font-extrabold text-primary hover:bg-tertiary"
+                className="mt-auto flex h-11 w-full cursor-pointer items-center justify-center rounded bg-border text-base font-extrabold text-primary hover:bg-tertiary"
                 href={`/groups/${group.id}`}
               >
                 View Group
               </Link>
             </li>
           ))}
+          {Array.from({ length: placeholderCount }).map((_, index) => {
+            const showOnTablet = index < tabletPlaceholderCount;
+            const showOnDesktop = index < desktopPlaceholderCount;
+
+            return (
+              <li
+                aria-hidden="true"
+                className={[
+                  "hidden h-72 flex-col rounded-lg border border-dashed border-border bg-surface/60 px-5 py-6",
+                  showOnTablet ? "md:flex" : "md:hidden",
+                  showOnDesktop ? "xl:flex" : "xl:hidden",
+                ].join(" ")}
+                key={`group-placeholder-${index}`}
+              >
+                <div className="mb-5 flex items-start justify-between gap-4">
+                  <span className="h-6 w-24 rounded bg-border/70" />
+                  <span className="h-5 w-16 rounded bg-border/60" />
+                </div>
+                <span className="h-7 w-3/4 rounded bg-border/70" />
+                <span className="mt-3 h-4 w-1/2 rounded bg-border/60" />
+                <div className="mt-6 rounded bg-neutral p-3">
+                  <span className="block h-3 w-28 rounded bg-border/60" />
+                  <span className="mt-3 block h-8 w-32 rounded bg-border/70" />
+                </div>
+                <span className="mt-auto block h-11 w-full rounded bg-border/60" />
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>
