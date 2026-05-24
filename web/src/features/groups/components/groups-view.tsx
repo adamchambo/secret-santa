@@ -2,10 +2,31 @@
 
 import Link from "next/link";
 import { LogIn, Plus } from "lucide-react";
-import { useMockGroups } from "@/src/features/groups/mock-group-store";
+import { useEffect, useState } from "react";
+import { getAuthOptions } from "@/src/lib/api/auth-options";
+import { getGroups, Group } from "@/src/lib/api/generated/client";
 
 export default function GroupsView() {
-  const groups = useMockGroups();
+  const [groups, setGroups] = useState<Group[]>([]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadGroups() {
+      await Promise.resolve();
+      const response = await getGroups(await getAuthOptions({ forceRefresh: true })).catch(
+        () => [],
+      );
+      if (!isActive) return;
+      setGroups(Array.isArray(response) ? response : []);
+    }
+
+    loadGroups();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   return (
     <section className="flex h-full flex-col overflow-hidden bg-background px-6 py-8 text-text md:px-[8vw] lg:px-[10vw]">
@@ -56,31 +77,31 @@ export default function GroupsView() {
               className="min-h-60 rounded-lg border-l-4 border-secondary bg-neutral px-5 py-5 shadow-sm"
             >
               <div className="mb-5 flex items-start justify-between gap-4">
-                <span
-                  className={
-                    group.status === "matched"
-                      ? "rounded-sm bg-primary/20 px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary"
-                      : "rounded-sm bg-tertiary px-3 py-1 text-xs font-bold uppercase tracking-widest text-text"
-                  }
-                >
-                  {group.status}
-                </span>
-                <span className="text-base font-bold text-text">{group.code}</span>
+              <span className="rounded-sm bg-tertiary px-3 py-1 text-xs font-bold uppercase tracking-widest text-text">
+                {group.isLocked ? "matched" : "pending"}
+              </span>
+                <span className="text-base font-bold text-text">#{group.inviteCode}</span>
               </div>
 
               <h2 className="font-heading text-xl font-extrabold text-text">
                 {group.name}
               </h2>
               <p className="mt-1 text-sm text-text">
-                {group.participants.length} Participants
+                Invite code: {group.inviteCode}
               </p>
 
               <div className="mt-6 rounded bg-surface p-3">
                 <p className="text-xs font-bold uppercase tracking-widest text-text">
-                  Budget Limit
+                  Exchange Date
                 </p>
                 <p className="mt-1 text-2xl font-extrabold text-primary">
-                  ${group.budgetLimit.toFixed(2)}
+                  {group.eventDate
+                    ? new Date(group.eventDate).toLocaleDateString("en-AU", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : "Date not set"}
                 </p>
               </div>
 

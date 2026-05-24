@@ -3,71 +3,63 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { Check, KeyRound } from "lucide-react";
-import {
-  updateMockGroup,
-  useMockGroups,
-} from "@/src/features/groups/mock-group-store";
+import { getAuthOptions } from "@/src/lib/api/auth-options";
+import { useAuth } from "@/src/features/auth/context/auth-provider";
+import { ensureBackendUser } from "@/src/features/auth/api";
 
-const mockCurrentUser = {
-  name: "Adam Chamberlain",
-  email: "adam@example.com",
+type JoinRequestResponse = {
+  status: "requested" | "already-member";
+  group: { name: string };
 };
 
 export default function JoinGroupView() {
-  const groups = useMockGroups();
+  const { user } = useAuth();
   const [inviteCode, setInviteCode] = useState("");
   const [joinMessage, setJoinMessage] = useState("");
   const [joinStatus, setJoinStatus] = useState<"idle" | "success" | "error">(
     "idle",
   );
 
-  function requestToJoin(event: FormEvent<HTMLFormElement>) {
+  async function requestToJoin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const code = inviteCode.trim().toUpperCase();
-    const group = groups.find(
-      (storedGroup) => storedGroup.inviteCode.toUpperCase() === code,
-    );
+    if (!user) return;
 
-    if (!group) {
-      setJoinStatus("error");
-      setJoinMessage("No group found for that code.");
-      return;
-    }
-
-    const alreadyJoined = group.participants.some(
-      (participant) => participant.email === mockCurrentUser.email,
-    );
-    const alreadyRequested = group.joinRequests.some(
-      (request) => request.email === mockCurrentUser.email,
-    );
-
-    if (alreadyJoined) {
-      setJoinStatus("success");
-      setJoinMessage(`You are already in ${group.name}.`);
-      return;
-    }
-
-    if (alreadyRequested) {
-      setJoinStatus("success");
-      setJoinMessage(`Your request for ${group.name} is already pending.`);
-      return;
-    }
-
-    updateMockGroup({
-      ...group,
-      joinRequests: [
-        ...group.joinRequests,
-        {
-          id: `request-${Date.now()}`,
-          name: mockCurrentUser.name,
-          email: mockCurrentUser.email,
-          requestedAt: new Date().toISOString(),
+    try {
+      await ensureBackendUser(user);
+      const authOptions = await getAuthOptions({ forceRefresh: true });
+      const response = await fetch("http://localhost:5001/api/groups/join-requests", {
+        ...authOptions,
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authOptions.headers,
         },
-      ],
-    });
-    setInviteCode("");
-    setJoinStatus("success");
-    setJoinMessage(`Request sent to ${group.name}.`);
+        body: JSON.stringify({ inviteCode: code }),
+      });
+      const body = await response.text();
+      const payload = body ? JSON.parse(body) : null;
+
+      if (!response.ok) {
+        const message =
+          payload?.error ?? payload?.message ?? "Could not request to join.";
+        throw new Error(message);
+      }
+
+      const result = payload as JoinRequestResponse;
+      setInviteCode("");
+      setJoinStatus("success");
+      setJoinMessage(
+        result.status === "already-member"
+          ? `You are already in ${result.group.name}.`
+          : `Request sent to ${result.group.name}.`,
+      );
+    } catch (error) {
+      setJoinStatus("error");
+      setJoinMessage(
+        error instanceof Error ? error.message : "Could not request to join.",
+      );
+    }
   }
 
   return (
@@ -133,7 +125,7 @@ export default function JoinGroupView() {
             </Link>
             <button
               className="inline-flex h-12 cursor-pointer items-center gap-2 rounded bg-primary px-7 font-extrabold text-background hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={!inviteCode.trim()}
+              disabled={!inviteCode.trim() || !user}
             >
               <Check size={18} />
               Request Join

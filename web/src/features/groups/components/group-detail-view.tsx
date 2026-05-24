@@ -2,16 +2,16 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Check,
   ChevronDown,
-  Pencil,
   Expand,
-  Minimize2,
   Gift,
   MapPin,
+  Minimize2,
   MoreVertical,
+  Pencil,
   RefreshCw,
   Send,
   ShieldCheck,
@@ -20,19 +20,66 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
-import AddFamilyModal from "./add-family-modal";
+import AddFamilyModal, { FamilyModalParticipant } from "./add-family-modal";
+import { useAuth } from "@/src/features/auth/context/auth-provider";
+import { getAuthOptions } from "@/src/lib/api/auth-options";
 import {
-  deleteMockGroup,
-  getMockGroups,
-  MockParticipant,
-  MockGroup,
-  updateMockGroup,
-  useMockGroups,
-} from "@/src/features/groups/mock-group-store";
+  deleteGroupsGroupId,
+  Family,
+  getGroupsGroupId,
+  getGroupsGroupIdFamilies,
+  getGroupsGroupIdMatches,
+  Group,
+  Match,
+  postGroupsGroupIdFamilies,
+  postGroupsGroupIdMatches,
+  putGroupsGroupId,
+  putGroupsGroupIdMembersMemberId,
+} from "@/src/lib/api/generated/client";
 
-function pickRandomParticipant(participants: MockParticipant[]) {
-  return participants[Math.floor(Math.random() * participants.length)];
-}
+type ApiGroup = Group & {
+  budgetLimit?: number;
+  description?: string;
+  location?: string;
+};
+
+type ApiMember = {
+  id: string;
+  userId: string;
+  groupId: string;
+  familyId?: string | null;
+  joinedAt?: string;
+  user?: {
+    id: string;
+    displayName?: string | null;
+    email: string;
+    icon?: string | null;
+  };
+};
+
+type ApiJoinRequest = {
+  id: string;
+  user: {
+    displayName?: string;
+    email: string;
+  };
+  requestedAt: string;
+};
+
+type ApiMessage = {
+  id?: string;
+  senderUserId?: string;
+  content?: string;
+  createdAt?: string;
+  author?: string;
+  time?: string;
+  text?: string;
+  tone?: "muted" | "self" | "warm";
+  senderUser?: {
+    displayName?: string | null;
+    email: string;
+  };
+};
 
 function getInitials(name: string) {
   return name
@@ -43,13 +90,37 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
+async function apiFetch<T>(path: string, init: RequestInit = {}) {
+  const authOptions = await getAuthOptions({ forceRefresh: true });
+  const response = await fetch(`http://localhost:5001/api${path}`, {
+    ...authOptions,
+    ...init,
+    headers: {
+      ...(init.body ? { "Content-Type": "application/json" } : {}),
+      ...authOptions.headers,
+      ...init.headers,
+    },
+  });
+  const text = await response.text();
+  const payload = text ? JSON.parse(text) : null;
+  if (!response.ok) {
+    throw new Error(payload?.error ?? payload?.message ?? "Request failed");
+  }
+  return payload as T;
+}
+
 export default function GroupDetailView() {
   const params = useParams<{ groupId: string }>();
   const router = useRouter();
+  const { user } = useAuth();
   const socketRef = useRef<WebSocket | null>(null);
   const inviteFeedbackTimeoutRef = useRef<number | null>(null);
-  const groups = useMockGroups();
-  const group = groups.find((storedGroup) => storedGroup.id === params.groupId) ?? null;
+  const [group, setGroup] = useState<ApiGroup | null>(null);
+  const [members, setMembers] = useState<ApiMember[]>([]);
+  const [families, setFamilies] = useState<Family[]>([]);
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [joinRequests, setJoinRequests] = useState<ApiJoinRequest[]>([]);
+  const [chatMessages, setChatMessages] = useState<ApiMessage[]>([]);
   const [isAddFamilyOpen, setIsAddFamilyOpen] = useState(false);
   const [isChatFullscreen, setIsChatFullscreen] = useState(false);
   const [isEditingGroup, setIsEditingGroup] = useState(false);
@@ -70,6 +141,42 @@ export default function GroupDetailView() {
     "connecting",
   );
 
+  const loadGroupData = useCallback(async () => {
+    const options = await getAuthOptions({ forceRefresh: true });
+    const [groupResponse, memberResponse, familyResponse, matchResponse, messageResponse] =
+      await Promise.all([
+        getGroupsGroupId(params.groupId, options),
+        apiFetch<ApiMember[]>(`/groups/${params.groupId}/members`),
+        getGroupsGroupIdFamilies(params.groupId, options).catch(() => []),
+        getGroupsGroupIdMatches(params.groupId, options).catch(() => []),
+        apiFetch<ApiMessage[]>(`/groups/${params.groupId}/chat/messages`).catch(() => []),
+      ]);
+
+    setGroup(groupResponse as ApiGroup);
+    setMembers(Array.isArray(memberResponse) ? memberResponse : []);
+    setFamilies(Array.isArray(familyResponse) ? familyResponse : []);
+    setMatches(Array.isArray(matchResponse) ? matchResponse : []);
+    setChatMessages(Array.isArray(messageResponse) ? messageResponse : []);
+  }, [params.groupId]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function load() {
+      await Promise.resolve();
+      try {
+        await loadGroupData();
+      } catch {
+        if (isActive) setGroup(null);
+      }
+    }
+
+    load();
+    return () => {
+      isActive = false;
+    };
+  }, [loadGroupData]);
+
   useEffect(() => {
     const groupId = params.groupId;
     const wsBaseUrl =
@@ -78,21 +185,12 @@ export default function GroupDetailView() {
     const socket = new WebSocket(`${wsBaseUrl}/api/groups/${groupId}/chat/ws`);
 
     socketRef.current = socket;
-
     socket.onopen = () => setSocketStatus("open");
     socket.onclose = () => setSocketStatus("closed");
     socket.onerror = () => setSocketStatus("closed");
     socket.onmessage = (event) => {
-      const incomingMessage = JSON.parse(event.data);
-      const currentGroup = getMockGroups().find(
-        (storedGroup) => storedGroup.id === groupId,
-      );
-      if (!currentGroup) return;
-
-      updateMockGroup({
-        ...currentGroup,
-        chatMessages: [...currentGroup.chatMessages, incomingMessage],
-      });
+      const incomingMessage = JSON.parse(event.data) as ApiMessage;
+      setChatMessages((messages) => [...messages, incomingMessage]);
     };
 
     return () => {
@@ -109,11 +207,20 @@ export default function GroupDetailView() {
     };
   }, []);
 
-  function saveGroup(nextGroup: MockGroup) {
-    updateMockGroup(nextGroup);
-  }
+  useEffect(() => {
+    async function loadJoinRequests() {
+      await Promise.resolve();
+      if (!group || group.adminId !== user?.id) return;
+      const requests = await apiFetch<ApiJoinRequest[]>(
+        `/groups/${group.id}/join-requests`,
+      ).catch(() => []);
+      setJoinRequests(Array.isArray(requests) ? requests : []);
+    }
 
-  async function copyInviteLink() {
+    loadJoinRequests();
+  }, [group, user]);
+
+  async function copyInviteCode() {
     if (!group) return;
 
     try {
@@ -126,96 +233,56 @@ export default function GroupDetailView() {
     if (inviteFeedbackTimeoutRef.current) {
       window.clearTimeout(inviteFeedbackTimeoutRef.current);
     }
-
     inviteFeedbackTimeoutRef.current = window.setTimeout(() => {
       setInviteCopyStatus("idle");
     }, 1800);
   }
 
-  function acceptJoinRequest(requestId: string) {
-    if (!group) return;
-
-    const request = group.joinRequests.find(
-      (joinRequest) => joinRequest.id === requestId,
+  async function assignFamily(memberId: string, familyName: string) {
+    const familyId = families.find((family) => family.name === familyName)?.id ?? null;
+    await putGroupsGroupIdMembersMemberId(
+      params.groupId,
+      memberId,
+      { familyId } as Parameters<typeof putGroupsGroupIdMembersMemberId>[2],
+      await getAuthOptions({ forceRefresh: true }),
     );
-    if (!request) return;
-
-    saveGroup({
-      ...group,
-      joinRequests: group.joinRequests.filter(
-        (joinRequest) => joinRequest.id !== requestId,
-      ),
-      participants: [
-        ...group.participants,
-        {
-          initials: getInitials(request.name),
-          name: request.name,
-          email: request.email,
-          status: "joined",
-          family: "None",
-          color: "bg-border text-text",
-        },
-      ],
-    });
+    await loadGroupData();
   }
 
-  function declineJoinRequest(requestId: string) {
-    if (!group) return;
-
-    saveGroup({
-      ...group,
-      joinRequests: group.joinRequests.filter(
-        (joinRequest) => joinRequest.id !== requestId,
-      ),
-    });
-  }
-
-  function assignFamily(email: string, family: string) {
-    if (!group) return;
-
-    saveGroup({
-      ...group,
-      participants: group.participants.map((participant) =>
-        participant.email === email ? { ...participant, family } : participant,
-      ),
-    });
-  }
-
-  function addFamily(familyName: string, participantEmails: string[]) {
-    if (!group) return;
-
-    saveGroup({
-      ...group,
-      families: Array.from(new Set([...group.families, familyName])),
-      participants: group.participants.map((participant) =>
-        participantEmails.includes(participant.email)
-          ? { ...participant, family: familyName }
-          : participant,
-      ),
-    });
-  }
-
-  function rerollMatches() {
-    if (!group) return;
-
-    const joinedParticipants = group.participants.filter(
-      (participant) => participant.status === "joined",
+  async function addFamily(familyName: string, participantEmails: string[]) {
+    const family = await postGroupsGroupIdFamilies(
+      params.groupId,
+      { name: familyName },
+      await getAuthOptions({ forceRefresh: true }),
     );
-    const nextMatch = pickRandomParticipant(joinedParticipants);
+    const authOptions = await getAuthOptions({ forceRefresh: true });
 
-    saveGroup({
-      ...group,
-      isLocked: true,
-      status: "matched",
-      matchName: nextMatch?.name ?? group.matchName,
-    });
+    await Promise.all(
+      members
+        .filter((member) => participantEmails.includes(member.user?.email ?? ""))
+        .map((member) =>
+          putGroupsGroupIdMembersMemberId(
+            params.groupId,
+            member.id,
+            { familyId: family.id },
+            authOptions,
+          ),
+        ),
+    );
+    await loadGroupData();
+  }
+
+  async function rerollMatches() {
+    const nextMatches = await postGroupsGroupIdMatches(
+      params.groupId,
+      await getAuthOptions({ forceRefresh: true }),
+    );
+    setMatches(Array.isArray(nextMatches) ? nextMatches : []);
     setIsMatchRevealed(false);
   }
 
-  function deleteGroup() {
-    if (!group) return;
-
-    deleteMockGroup(group.id);
+  async function deleteGroup() {
+    await deleteGroupsGroupId(params.groupId, await getAuthOptions({ forceRefresh: true }));
     router.push("/groups");
   }
 
@@ -224,31 +291,35 @@ export default function GroupDetailView() {
 
     setEditGroupForm({
       name: group.name,
-      budgetLimit: String(group.budgetLimit),
-      eventDate: group.eventDate,
-      location: group.location,
-      description: group.description,
+      budgetLimit: String(group.budgetLimit ?? ""),
+      eventDate: group.eventDate ? group.eventDate.slice(0, 10) : "",
+      location: group.location ?? "",
+      description: group.description ?? "",
     });
     setIsEditingGroup(true);
   }
 
-  function saveGroupDetails() {
+  async function saveGroupDetails() {
     if (!group) return;
 
-    saveGroup({
-      ...group,
-      name: editGroupForm.name.trim() || group.name,
-      budgetLimit: Number(editGroupForm.budgetLimit) || 0,
-      eventDate: editGroupForm.eventDate,
-      location: editGroupForm.location.trim() || "Location not set",
-      description: editGroupForm.description,
-    });
+    const updatedGroup = await putGroupsGroupId(
+      group.id,
+      {
+        name: editGroupForm.name.trim() || group.name,
+        eventDate: editGroupForm.eventDate
+          ? new Date(`${editGroupForm.eventDate}T00:00:00`).toISOString()
+          : undefined,
+        budgetLimit: Number(editGroupForm.budgetLimit) || undefined,
+        location: editGroupForm.location.trim() || undefined,
+        description: editGroupForm.description,
+      } as Parameters<typeof putGroupsGroupId>[1],
+      await getAuthOptions({ forceRefresh: true }),
+    );
+    setGroup(updatedGroup as ApiGroup);
     setIsEditingGroup(false);
   }
 
   function revealMatch() {
-    if (group?.status !== "matched") return;
-
     setIsMatchRevealing(true);
     setIsMatchRevealed(false);
     window.setTimeout(() => {
@@ -257,27 +328,47 @@ export default function GroupDetailView() {
     }, 900);
   }
 
-  function sendMessage() {
+  async function acceptJoinRequest(requestId: string) {
+    await apiFetch(`/groups/${params.groupId}/join-requests/${requestId}/accept`, {
+      method: "POST",
+    });
+    setJoinRequests((requests) =>
+      requests.filter((request) => request.id !== requestId),
+    );
+    await loadGroupData();
+  }
+
+  async function declineJoinRequest(requestId: string) {
+    await apiFetch(`/groups/${params.groupId}/join-requests/${requestId}`, {
+      method: "DELETE",
+    });
+    setJoinRequests((requests) =>
+      requests.filter((request) => request.id !== requestId),
+    );
+  }
+
+  async function sendMessage() {
     const text = message.trim();
     if (!group || !text) return;
 
-    const outgoingMessage = {
+    const outgoingMessage: ApiMessage = {
       author: "Me",
       time: new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
       }),
       text,
-      tone: "self" as const,
+      tone: "self",
     };
 
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify(outgoingMessage));
     } else {
-      saveGroup({
-        ...group,
-        chatMessages: [...group.chatMessages, outgoingMessage],
-      });
+      const createdMessage = await apiFetch<ApiMessage>(
+        `/groups/${group.id}/chat/messages`,
+        { method: "POST", body: JSON.stringify({ content: text }) },
+      );
+      setChatMessages((messages) => [...messages, createdMessage]);
     }
 
     setMessage("");
@@ -296,7 +387,24 @@ export default function GroupDetailView() {
     );
   }
 
-  const isAdmin = group.adminId === "user-1";
+  const isAdmin = group.adminId === user?.id;
+  const familyNames = ["None", ...families.map((family) => family.name)];
+  const participants: FamilyModalParticipant[] = members.map((member) => {
+    const name = member.user?.displayName || member.user?.email || member.userId;
+    return {
+      initials: getInitials(name),
+      name,
+      email: member.user?.email ?? member.userId,
+      family: families.find((family) => family.id === member.familyId)?.name ?? "None",
+      color: "bg-border text-text",
+    };
+  });
+  const myMatch = matches.find((match) => match.givingUserId === user?.id);
+  const myMatchMember = members.find(
+    (member) => member.userId === myMatch?.receivingUserId,
+  );
+  const myMatchName =
+    myMatchMember?.user?.displayName || myMatchMember?.user?.email || "No match yet";
   const chatConnectionStatus = socketStatus;
 
   return (
@@ -329,10 +437,10 @@ export default function GroupDetailView() {
                 </span>
               ) : null}
               <span className="ml-auto rounded-xl bg-primary/20 px-4 py-2 text-sm font-extrabold uppercase tracking-widest text-primary">
-                {group.status}
+                {matches.length ? "matched" : "pending"}
               </span>
               <div className="flex -space-x-2">
-                {group.participants.slice(0, 3).map((participant) => (
+                {participants.slice(0, 3).map((participant) => (
                   <span
                     key={participant.email}
                     className="flex size-9 items-center justify-center rounded-full bg-border text-xs font-bold text-text ring-2 ring-background"
@@ -341,7 +449,7 @@ export default function GroupDetailView() {
                   </span>
                 ))}
                 <span className="flex size-9 items-center justify-center rounded-full bg-primary text-xs font-bold text-background ring-2 ring-background">
-                  +{Math.max(group.participants.length - 3, 0)}
+                  +{Math.max(participants.length - 3, 0)}
                 </span>
               </div>
             </div>
@@ -361,13 +469,9 @@ export default function GroupDetailView() {
                       ? "inline-flex h-11 cursor-pointer items-center gap-3 rounded border border-secondary/50 bg-tertiary px-4 font-bold text-secondary"
                       : "inline-flex h-11 cursor-pointer items-center gap-3 rounded border border-border px-4 font-bold hover:bg-surface"
                 }
-                onClick={copyInviteLink}
+                onClick={copyInviteCode}
               >
-                {inviteCopyStatus === "copied" ? (
-                  <Check size={18} />
-                ) : (
-                  <UserPlus size={18} />
-                )}
+                {inviteCopyStatus === "copied" ? <Check size={18} /> : <UserPlus size={18} />}
                 {inviteCopyStatus === "copied"
                   ? "Copied"
                   : inviteCopyStatus === "failed"
@@ -519,44 +623,47 @@ export default function GroupDetailView() {
             </section>
           ) : null}
 
-          {isAdmin && group.joinRequests.length > 0 ? (
+          {isAdmin && joinRequests.length > 0 ? (
             <section className="mb-6 rounded-lg border border-border bg-surface p-5">
               <div className="mb-4 flex items-center justify-between gap-4">
                 <h2 className="font-heading text-xl font-extrabold text-text">
                   Join Requests
                 </h2>
                 <span className="rounded bg-primary/20 px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary">
-                  {group.joinRequests.length} Pending
+                  {joinRequests.length} Pending
                 </span>
               </div>
 
               <div className="space-y-3">
-                {group.joinRequests.map((request) => (
-                  <div
-                    key={request.id}
-                    className="flex flex-wrap items-center gap-4 rounded bg-neutral px-4 py-3"
-                  >
-                    <div className="flex size-11 items-center justify-center rounded-xl bg-border font-extrabold text-text">
-                      {getInitials(request.name)}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-extrabold text-text">{request.name}</p>
-                      <p className="text-sm text-text-muted">{request.email}</p>
-                    </div>
-                    <button
-                      className="h-10 cursor-pointer rounded bg-primary px-4 font-extrabold text-background hover:opacity-90"
-                      onClick={() => acceptJoinRequest(request.id)}
+                {joinRequests.map((request) => {
+                  const name = request.user.displayName || request.user.email;
+                  return (
+                    <div
+                      key={request.id}
+                      className="flex flex-wrap items-center gap-4 rounded bg-neutral px-4 py-3"
                     >
-                      Accept
-                    </button>
-                    <button
-                      className="h-10 cursor-pointer rounded border border-border px-4 font-extrabold text-text hover:bg-tertiary"
-                      onClick={() => declineJoinRequest(request.id)}
-                    >
-                      Decline
-                    </button>
-                  </div>
-                ))}
+                      <div className="flex size-11 items-center justify-center rounded-xl bg-border font-extrabold text-text">
+                        {getInitials(name)}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-extrabold text-text">{name}</p>
+                        <p className="text-sm text-text-muted">{request.user.email}</p>
+                      </div>
+                      <button
+                        className="h-10 cursor-pointer rounded bg-primary px-4 font-extrabold text-background hover:opacity-90"
+                        onClick={() => acceptJoinRequest(request.id)}
+                      >
+                        Accept
+                      </button>
+                      <button
+                        className="h-10 cursor-pointer rounded border border-border px-4 font-extrabold text-text hover:bg-tertiary"
+                        onClick={() => declineJoinRequest(request.id)}
+                      >
+                        Decline
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </section>
           ) : null}
@@ -567,38 +674,29 @@ export default function GroupDetailView() {
                 Your Secret Match
               </h2>
               <p className="mt-3 max-w-sm text-base text-background/75">
-                {group.status === "matched"
+                {matches.length
                   ? "The draw is complete. Reveal who you'll be surprising this year."
                   : "Run matches when your participant list is ready."}
               </p>
               {isMatchRevealed ? (
                 <div className="mt-6 flex max-w-sm animate-[matchReveal_500ms_ease-out] items-center gap-4 rounded-lg bg-neutral p-4 text-text shadow-lg">
                   <div className="flex size-14 items-center justify-center rounded-xl bg-tertiary text-lg font-extrabold text-primary">
-                    {group.matchName
-                      .split(" ")
-                      .map((part) => part[0])
-                      .join("")
-                      .slice(0, 2)
-                      .toUpperCase() || "?"}
+                    {getInitials(myMatchName)}
                   </div>
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest text-text-muted">
                       Your Match
                     </p>
-                    <p className="text-xl font-extrabold text-primary">
-                      {group.matchName || "No match yet"}
-                    </p>
+                    <p className="text-xl font-extrabold text-primary">{myMatchName}</p>
                     <p className="text-sm text-text">
-                      {group.participants.find(
-                        (participant) => participant.name === group.matchName,
-                      )?.email ?? "Profile hidden until invite accepted"}
+                      {myMatchMember?.user?.email ?? "Profile hidden until invite accepted"}
                     </p>
                   </div>
                 </div>
               ) : (
                 <button
                   className="mt-6 h-12 cursor-pointer rounded bg-neutral px-8 text-base font-extrabold text-text hover:bg-tertiary disabled:cursor-not-allowed disabled:opacity-50"
-                  disabled={group.status !== "matched" || isMatchRevealing}
+                  disabled={!matches.length || isMatchRevealing}
                   onClick={revealMatch}
                 >
                   {isMatchRevealing ? "Drawing..." : "Reveal Match"}
@@ -613,11 +711,9 @@ export default function GroupDetailView() {
             <section className="rounded-lg bg-surface p-6">
               <div className="grid grid-cols-2 gap-8">
                 <div>
-                  <p className="text-sm uppercase tracking-widest text-text">
-                    Budget
-                  </p>
+                  <p className="text-sm uppercase tracking-widest text-text">Budget</p>
                   <p className="mt-2 text-2xl font-extrabold text-primary">
-                    ${group.budgetLimit.toFixed(2)}
+                    ${(group.budgetLimit ?? 0).toFixed(2)}
                   </p>
                 </div>
                 <div>
@@ -626,17 +722,17 @@ export default function GroupDetailView() {
                   </p>
                   <p className="mt-2 text-2xl font-extrabold text-primary">
                     {group.eventDate
-                      ? new Date(`${group.eventDate}T00:00:00`).toLocaleDateString(
-                          "en-AU",
-                          { day: "numeric", month: "short" },
-                        )
+                      ? new Date(group.eventDate).toLocaleDateString("en-AU", {
+                          day: "numeric",
+                          month: "short",
+                        })
                       : "Not set"}
                   </p>
                 </div>
               </div>
               <div className="mt-8 flex items-center gap-4 border-t border-border pt-6">
                 <MapPin size={26} className="text-primary" />
-                <p className="text-lg">{group.location}</p>
+                <p className="text-lg">{group.location || "Location not set"}</p>
               </div>
             </section>
           </div>
@@ -648,73 +744,64 @@ export default function GroupDetailView() {
               </h2>
               <span className="inline-flex items-center gap-3 rounded bg-border px-4 py-3 text-lg">
                 <Users size={21} />
-                {group.participants.length} Members
+                {members.length} Members
               </span>
             </div>
 
             <div className="rounded-lg bg-surface p-3">
-              {group.participants.map((participant) => (
-                <div
-                  key={participant.email}
-                  className="flex items-center gap-5 rounded bg-neutral px-5 py-3"
-                >
-                  <div
-                    className={`flex size-12 items-center justify-center rounded-xl text-lg font-extrabold ${participant.color}`}
-                  >
-                    {participant.initials}
-                  </div>
-                  <div>
-                    <p className="text-lg font-extrabold text-text">
-                      {participant.name}
-                    </p>
-                    <p className="text-sm text-text-muted">{participant.email}</p>
-                  </div>
-                  <label className="relative ml-auto">
-                    <select
-                      aria-label={`Assign ${participant.name} to family`}
-                      className={
-                        participant.family === "None"
-                          ? "h-9 cursor-pointer appearance-none rounded-xl bg-border px-4 pr-9 text-xs font-bold uppercase tracking-widest text-text outline-none hover:bg-tertiary"
-                          : "h-9 cursor-pointer appearance-none rounded-xl bg-primary/20 px-4 pr-9 text-xs font-bold uppercase tracking-widest text-primary outline-none hover:bg-tertiary"
-                      }
-                      disabled={!isAdmin}
-                      onChange={(event) =>
-                        assignFamily(participant.email, event.target.value)
-                      }
-                      value={participant.family}
-                    >
-                      {group.families.map((family) => (
-                        <option key={family} value={family}>
-                          {family}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown
-                      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text"
-                      size={15}
-                    />
-                  </label>
+              {members.map((member) => {
+                const name = member.user?.displayName || member.user?.email || member.userId;
+                const familyName =
+                  families.find((family) => family.id === member.familyId)?.name ?? "None";
 
-                  <span
-                    className={
-                      participant.status === "joined"
-                        ? "rounded-xl bg-primary/20 px-4 py-2 text-xs font-bold uppercase tracking-widest text-primary"
-                        : "rounded-xl bg-tertiary px-4 py-2 text-xs font-bold uppercase tracking-widest text-text"
-                    }
+                return (
+                  <div
+                    key={member.id}
+                    className="flex items-center gap-5 rounded bg-neutral px-5 py-3"
                   >
-                    {participant.status}
-                  </span>
-                  <button
-                    aria-label={`Remove ${participant.name}`}
-                    className="cursor-pointer text-text hover:text-secondary"
-                  >
-                    <UserMinus size={20} />
-                  </button>
-                </div>
-              ))}
-              <button className="mt-5 h-12 w-full cursor-pointer rounded font-extrabold text-text hover:bg-neutral">
-                View All Participants
-              </button>
+                    <div className="flex size-12 items-center justify-center rounded-xl bg-border text-lg font-extrabold text-text">
+                      {getInitials(name)}
+                    </div>
+                    <div>
+                      <p className="text-lg font-extrabold text-text">{name}</p>
+                      <p className="text-sm text-text-muted">{member.user?.email}</p>
+                    </div>
+                    <label className="relative ml-auto">
+                      <select
+                        aria-label={`Assign ${name} to family`}
+                        className={
+                          familyName === "None"
+                            ? "h-9 cursor-pointer appearance-none rounded-xl bg-border px-4 pr-9 text-xs font-bold uppercase tracking-widest text-text outline-none hover:bg-tertiary"
+                            : "h-9 cursor-pointer appearance-none rounded-xl bg-primary/20 px-4 pr-9 text-xs font-bold uppercase tracking-widest text-primary outline-none hover:bg-tertiary"
+                        }
+                        disabled={!isAdmin}
+                        onChange={(event) => assignFamily(member.id, event.target.value)}
+                        value={familyName}
+                      >
+                        {familyNames.map((family) => (
+                          <option key={family} value={family}>
+                            {family}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown
+                        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text"
+                        size={15}
+                      />
+                    </label>
+
+                    <span className="rounded-xl bg-primary/20 px-4 py-2 text-xs font-bold uppercase tracking-widest text-primary">
+                      joined
+                    </span>
+                    <button
+                      aria-label={`Remove ${name}`}
+                      className="cursor-pointer text-text hover:text-secondary"
+                    >
+                      <UserMinus size={20} />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </section>
         </div>
@@ -762,31 +849,48 @@ export default function GroupDetailView() {
                 : "min-h-0 flex-1 space-y-7 overflow-y-auto bg-surface p-6"
             }
           >
-            {group.chatMessages.map((message) => (
-              <div key={`${message.author}-${message.time}`}>
-                <div
-                  className={
-                    message.tone === "self"
-                      ? "mb-2 flex justify-end gap-3 text-sm"
-                      : "mb-2 flex gap-3 text-sm"
-                  }
-                >
-                  <span className="font-bold text-text">{message.author}</span>
-                  <span>{message.time}</span>
-                </div>
-                <p
-                  className={
-                    message.tone === "self"
-                      ? "ml-auto max-w-[70%] rounded-lg bg-primary p-4 text-base text-background"
-                      : message.tone === "warm"
-                        ? "max-w-[70%] rounded-lg bg-tertiary p-4 text-base text-text"
+            {chatMessages.map((chatMessage, index) => {
+              const author =
+                chatMessage.author ||
+                chatMessage.senderUser?.displayName ||
+                chatMessage.senderUser?.email ||
+                "Member";
+              const text = chatMessage.text || chatMessage.content || "";
+              const isSelf =
+                chatMessage.tone === "self" || chatMessage.senderUserId === user?.id;
+              const time = chatMessage.time
+                ? chatMessage.time
+                : chatMessage.createdAt
+                  ? new Date(chatMessage.createdAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "";
+
+              return (
+                <div key={chatMessage.id ?? `${author}-${index}`}>
+                  <div
+                    className={
+                      isSelf
+                        ? "mb-2 flex justify-end gap-3 text-sm"
+                        : "mb-2 flex gap-3 text-sm"
+                    }
+                  >
+                    <span className="font-bold text-text">{author}</span>
+                    <span>{time}</span>
+                  </div>
+                  <p
+                    className={
+                      isSelf
+                        ? "ml-auto max-w-[70%] rounded-lg bg-primary p-4 text-base text-background"
                         : "max-w-[70%] rounded-lg bg-border p-4 text-base text-text"
-                  }
-                >
-                  {message.text}
-                </p>
-              </div>
-            ))}
+                    }
+                  >
+                    {text}
+                  </p>
+                </div>
+              );
+            })}
           </div>
 
           <div className="flex shrink-0 gap-3 border-t border-border bg-neutral p-5">
@@ -822,7 +926,7 @@ export default function GroupDetailView() {
 
       <AddFamilyModal
         isOpen={isAddFamilyOpen}
-        participants={group.participants}
+        participants={participants}
         onSave={addFamily}
         onClose={() => setIsAddFamilyOpen(false)}
       />

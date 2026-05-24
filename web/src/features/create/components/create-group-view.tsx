@@ -4,28 +4,62 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { Calendar } from "lucide-react";
-import { createMockGroup } from "@/src/features/groups/mock-group-store";
+import { ensureBackendUser } from "@/src/features/auth/api";
+import { useAuth } from "@/src/features/auth/context/auth-provider";
+import { getAuthOptions } from "@/src/lib/api/auth-options";
+import { Group, postGroups } from "@/src/lib/api/generated/client";
+
+function isApiGroup(value: unknown): value is Group {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "id" in value &&
+    "inviteCode" in value
+  );
+}
 
 export default function CreateGroupView() {
   const router = useRouter();
+  const { user } = useAuth();
   const [name, setName] = useState("");
   const [budgetLimit, setBudgetLimit] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [description, setDescription] = useState("");
+  const [error, setError] = useState("");
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmedName = name.trim();
     if (!trimmedName) return;
+    setError("");
 
-    const group = createMockGroup({
-      name: trimmedName,
-      budgetLimit: Number(budgetLimit) || 0,
-      eventDate,
-      description,
-    });
-
-    router.push(`/groups/${group.id}`);
+    try {
+      if (!user) throw new Error("You need to be logged in to create a group.");
+      await ensureBackendUser(user);
+      const apiGroup = await postGroups(
+        {
+          name: trimmedName,
+          budgetLimit: Number(budgetLimit) || undefined,
+          description,
+          location: "Location not set",
+          eventDate: eventDate ? new Date(`${eventDate}T00:00:00`).toISOString() : undefined,
+        } as Parameters<typeof postGroups>[0] & {
+          budgetLimit?: number;
+          description?: string;
+          location?: string;
+        },
+        await getAuthOptions({ forceRefresh: true }),
+      );
+      if (!isApiGroup(apiGroup)) throw new Error("Group could not be created");
+      router.push(`/groups/${apiGroup.id}`);
+    } catch (createError) {
+      console.error("Failed to create group:", createError);
+      setError(
+        createError instanceof Error
+          ? createError.message
+          : "Group could not be created.",
+      );
+    }
   }
 
   return (
@@ -121,6 +155,7 @@ export default function CreateGroupView() {
               Initialize Group
             </button>
           </div>
+          {error ? <p className="mt-4 font-bold text-secondary">{error}</p> : null}
         </form>
       </div>
     </section>

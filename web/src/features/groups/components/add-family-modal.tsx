@@ -2,11 +2,18 @@
 
 import { useState } from "react";
 import { Check, X } from "lucide-react";
-import { MockParticipant } from "@/src/features/groups/mock-group-store";
+
+export type FamilyModalParticipant = {
+  initials: string;
+  name: string;
+  email: string;
+  family: string;
+  color: string;
+};
 
 type AddFamilyModalProps = {
   isOpen: boolean;
-  participants: MockParticipant[];
+  participants: FamilyModalParticipant[];
   onClose: () => void;
   onSave: (familyName: string, participantEmails: string[]) => void;
 };
