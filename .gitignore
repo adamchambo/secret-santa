@@ -1,4 +1,6 @@
 *.pdf
 tables.png
 notes.txt
+remove-polling-after-testing.md
+.pnpm-store/
 .env

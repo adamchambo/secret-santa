@@ -67,7 +67,7 @@ function getApiErrorMessage(payload: unknown, fallback: string) {
 
 async function updateProfileUser(
   userId: string,
-  data: { displayName?: string; icon?: string },
+  data: { displayName?: string; icon?: string; description?: string },
   forceRefreshToken = false,
 ) {
   const authOptions = await getAuthOptions({ forceRefresh: forceRefreshToken });
@@ -98,7 +98,7 @@ async function updateProfileUser(
 
 async function updateProfileUserWithRetry(
   user: NonNullable<ReturnType<typeof useAuth>["user"]>,
-  data: { displayName?: string; icon?: string },
+  data: { displayName?: string; icon?: string; description?: string },
 ) {
   try {
     return await updateProfileUser(user.id, data);
@@ -148,7 +148,6 @@ export default function ProfileView() {
         getUsersUserIdPreferences(user.id, options).catch(() => null),
         getGroups(options).catch(() => []),
       ]);
-      const storedDetails = getStoredProfileDetails();
       const profile = isAppUser(profileResponse)
         ? profileResponse
         : await ensureBackendUser(user);
@@ -157,7 +156,7 @@ export default function ProfileView() {
 
       setAppUser(profile);
       setDisplayName(profile.displayName ?? "");
-      setDescription(storedDetails.description);
+      setDescription(profile.description ?? getStoredProfileDetails().description);
       if (profile.icon) storeProfilePhoto(profile.icon);
       else removeStoredProfilePhoto();
       setGiftOptions([...giftList].sort((a, b) => a.priority - b.priority));
@@ -214,11 +213,16 @@ export default function ProfileView() {
     try {
       const updatedUser = await updateProfileUserWithRetry(user, {
         displayName: nextDisplayName,
+        description,
       });
 
       setAppUser(updatedUser);
       setDisplayName(updatedUser.displayName ?? "");
-      storeProfileDetails({ displayName: updatedUser.displayName ?? "", description });
+      setDescription(updatedUser.description ?? "");
+      storeProfileDetails({
+        displayName: updatedUser.displayName ?? "",
+        description: updatedUser.description ?? "",
+      });
       setIsEditingProfile(false);
     } catch (error) {
       console.error("Failed to save profile details:", error);

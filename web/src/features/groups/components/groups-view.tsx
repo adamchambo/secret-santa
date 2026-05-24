@@ -108,15 +108,11 @@ export default function GroupsView() {
               >
                 {group.isLocked ? "matched" : "pending"}
               </span>
-                <span className="text-base font-bold text-text">#{group.inviteCode}</span>
               </div>
 
               <h2 className="font-heading text-xl font-extrabold text-text">
                 {group.name}
               </h2>
-              <p className="mt-1 text-sm text-text">
-                Invite code: {group.inviteCode}
-              </p>
 
               <div className="mt-6 rounded bg-surface p-3">
                 <p className="text-xs font-bold uppercase tracking-widest text-text">

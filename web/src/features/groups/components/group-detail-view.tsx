@@ -54,6 +54,7 @@ type ApiMember = {
     displayName?: string | null;
     email: string;
     icon?: string | null;
+    description?: string | null;
   };
 };
 
@@ -84,6 +85,7 @@ type ApiMessage = {
 type ActionStatus = "idle" | "loading" | "success" | "error";
 
 const MATCH_REVEAL_STORAGE_KEY = "secret-santa.revealed-matches";
+const CHAT_BOTTOM_THRESHOLD_PX = 80;
 
 function getInitials(name: string) {
   return name
@@ -160,6 +162,13 @@ function mergeChatMessages(currentMessages: ApiMessage[], incomingMessages: ApiM
   });
 }
 
+function isChatScrolledNearBottom(element: HTMLDivElement) {
+  return (
+    element.scrollHeight - element.scrollTop - element.clientHeight <=
+    CHAT_BOTTOM_THRESHOLD_PX
+  );
+}
+
 async function apiFetch<T>(path: string, init: RequestInit = {}) {
   const authOptions = await getAuthOptions();
   const requestInit = {
@@ -198,12 +207,15 @@ export default function GroupDetailView() {
   const { user } = useAuth();
   const socketRef = useRef<WebSocket | null>(null);
   const inviteFeedbackTimeoutRef = useRef<number | null>(null);
+  const chatScrollRef = useRef<HTMLDivElement | null>(null);
+  const shouldStickToChatBottomRef = useRef(true);
   const [group, setGroup] = useState<ApiGroup | null>(null);
   const [members, setMembers] = useState<ApiMember[]>([]);
   const [families, setFamilies] = useState<Family[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
   const [joinRequests, setJoinRequests] = useState<ApiJoinRequest[]>([]);
   const [chatMessages, setChatMessages] = useState<ApiMessage[]>([]);
+  const [hasUnreadRecentMessages, setHasUnreadRecentMessages] = useState(false);
   const [isAddFamilyOpen, setIsAddFamilyOpen] = useState(false);
   const [isChatFullscreen, setIsChatFullscreen] = useState(false);
   const [isEditingGroup, setIsEditingGroup] = useState(false);
@@ -246,9 +258,39 @@ export default function GroupDetailView() {
     }, 2400);
   }
 
+  function scrollChatToBottom() {
+    const chatScrollElement = chatScrollRef.current;
+    if (!chatScrollElement) return;
+
+    chatScrollElement.scrollTo({
+      top: chatScrollElement.scrollHeight,
+      behavior: "smooth",
+    });
+    shouldStickToChatBottomRef.current = true;
+    setHasUnreadRecentMessages(false);
+  }
+
+  function handleChatScroll() {
+    const chatScrollElement = chatScrollRef.current;
+    if (!chatScrollElement) return;
+
+    const isNearBottom = isChatScrolledNearBottom(chatScrollElement);
+    shouldStickToChatBottomRef.current = isNearBottom;
+    if (isNearBottom) setHasUnreadRecentMessages(false);
+  }
+
   const loadChatMessages = useCallback(async () => {
     const response = await apiFetch<ApiMessage[]>(
       `/groups/${params.groupId}/chat/messages`,
+    ).catch(() => []);
+
+    return Array.isArray(response) ? response : [];
+  }, [params.groupId]);
+
+  const loadMatches = useCallback(async () => {
+    const response = await getGroupsGroupIdMatches(
+      params.groupId,
+      await getAuthOptions(),
     ).catch(() => []);
 
     return Array.isArray(response) ? response : [];
@@ -261,7 +303,7 @@ export default function GroupDetailView() {
         getGroupsGroupId(params.groupId, options),
         apiFetch<ApiMember[]>(`/groups/${params.groupId}/members`),
         getGroupsGroupIdFamilies(params.groupId, options).catch(() => []),
-        getGroupsGroupIdMatches(params.groupId, options).catch(() => []),
+        loadMatches(),
         loadChatMessages(),
       ]);
 
@@ -270,7 +312,7 @@ export default function GroupDetailView() {
     setFamilies(Array.isArray(familyResponse) ? familyResponse : []);
     setMatches(Array.isArray(matchResponse) ? matchResponse : []);
     setChatMessages(Array.isArray(messageResponse) ? messageResponse : []);
-  }, [loadChatMessages, params.groupId]);
+  }, [loadChatMessages, loadMatches, params.groupId]);
 
   useEffect(() => {
     let isActive = true;
@@ -311,6 +353,67 @@ export default function GroupDetailView() {
       socketRef.current = null;
     };
   }, [params.groupId]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function refreshMatches() {
+      await Promise.resolve();
+      const nextMatches = await loadMatches();
+      if (!isActive) return;
+
+      setMatches((currentMatches) =>
+        getMatchSignature(currentMatches) === getMatchSignature(nextMatches)
+          ? currentMatches
+          : nextMatches,
+      );
+      if (nextMatches.length) {
+        setGroup((currentGroup) =>
+          currentGroup ? { ...currentGroup, isLocked: true } : currentGroup,
+        );
+      }
+    }
+
+    const refreshOnFocus = () => {
+      void refreshMatches();
+    };
+    const refreshOnVisible = () => {
+      if (document.visibilityState === "visible") void refreshMatches();
+    };
+    const intervalId = window.setInterval(() => {
+      void refreshMatches();
+    }, 1500);
+
+    window.addEventListener("focus", refreshOnFocus);
+    document.addEventListener("visibilitychange", refreshOnVisible);
+
+    return () => {
+      isActive = false;
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refreshOnFocus);
+      document.removeEventListener("visibilitychange", refreshOnVisible);
+    };
+  }, [loadMatches]);
+
+  useEffect(() => {
+    const animationFrameId = window.requestAnimationFrame(() => {
+      const chatScrollElement = chatScrollRef.current;
+      if (!chatScrollElement) return;
+
+      if (shouldStickToChatBottomRef.current) {
+        chatScrollElement.scrollTo({
+          top: chatScrollElement.scrollHeight,
+          behavior: "smooth",
+        });
+        setHasUnreadRecentMessages(false);
+        return;
+      }
+
+      setHasUnreadRecentMessages(true);
+    });
+
+    return () => window.cancelAnimationFrame(animationFrameId);
+  }, [chatMessages.length, isChatFullscreen]);
 
   useEffect(() => {
     let isActive = true;
@@ -649,14 +752,6 @@ export default function GroupDetailView() {
       <section className="grid h-full overflow-hidden bg-background px-6 py-6 text-text md:px-10 xl:grid-cols-[minmax(0,1fr)_24rem] xl:gap-8">
         <div className="min-h-0 overflow-y-auto pr-2">
           <div className="mb-5">
-            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-text">
-              <Link className="cursor-pointer hover:text-primary" href="/groups">
-                Groups
-              </Link>{" "}
-              <span className="mx-2 text-text-muted">›</span>
-              <span>{group.name}</span>
-            </p>
-
             <div className="flex flex-wrap items-center gap-4">
               <h1 className="font-heading text-3xl font-extrabold text-primary">
                 {group.name}
@@ -941,9 +1036,24 @@ export default function GroupDetailView() {
                   : "Run matches when your participant list is ready."}
               </p>
               {isMatchRevealed ? (
-                <div className="mt-6 flex max-w-sm animate-[matchReveal_500ms_ease-out] items-center gap-4 rounded-lg bg-neutral p-4 text-text shadow-lg">
+                <button
+                  className="mt-6 flex max-w-sm animate-[matchReveal_500ms_ease-out] cursor-pointer items-center gap-4 rounded-lg bg-neutral p-4 text-left text-text shadow-lg transition hover:-translate-y-0.5 hover:bg-tertiary"
+                  onClick={() => {
+                    if (myMatchMember) router.push(`/profile/${myMatchMember.userId}`);
+                  }}
+                  type="button"
+                >
                   <div className="flex size-14 items-center justify-center rounded-xl bg-tertiary text-lg font-extrabold text-primary">
-                    {getInitials(myMatchName)}
+                    {myMatchMember?.user?.icon ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        alt={myMatchName}
+                        className="size-full rounded-xl object-cover"
+                        src={myMatchMember.user.icon}
+                      />
+                    ) : (
+                      getInitials(myMatchName)
+                    )}
                   </div>
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest text-text-muted">
@@ -954,7 +1064,7 @@ export default function GroupDetailView() {
                       {myMatchMember?.user?.email ?? "Profile hidden until invite accepted"}
                     </p>
                   </div>
-                </div>
+                </button>
               ) : (
                 <button
                   className="mt-6 h-12 cursor-pointer rounded bg-neutral px-8 text-base font-extrabold text-text hover:bg-tertiary disabled:cursor-not-allowed disabled:opacity-50"
@@ -1019,16 +1129,37 @@ export default function GroupDetailView() {
                 return (
                   <div
                     key={member.id}
-                    className="flex items-center gap-5 rounded bg-neutral px-5 py-3"
+                    className="flex w-full cursor-pointer items-center gap-5 rounded bg-neutral px-5 py-3 text-left transition hover:bg-tertiary"
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        router.push(`/profile/${member.userId}`);
+                      }
+                    }}
+                    onClick={() => router.push(`/profile/${member.userId}`)}
+                    role="button"
+                    tabIndex={0}
                   >
                     <div className="flex size-12 items-center justify-center rounded-xl bg-border text-lg font-extrabold text-text">
-                      {getInitials(name)}
+                      {member.user?.icon ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          alt={name}
+                          className="size-full rounded-xl object-cover"
+                          src={member.user.icon}
+                        />
+                      ) : (
+                        getInitials(name)
+                      )}
                     </div>
                     <div>
                       <p className="text-lg font-extrabold text-text">{name}</p>
                       <p className="text-sm text-text-muted">{member.user?.email}</p>
                     </div>
-                    <label className="relative ml-auto">
+                    <label
+                      className="relative ml-auto"
+                      onClick={(event) => event.stopPropagation()}
+                    >
                       <select
                         aria-label={`Assign ${name} to family`}
                         className={
@@ -1038,6 +1169,7 @@ export default function GroupDetailView() {
                         }
                         disabled={!isAdmin || familyStatus === "loading"}
                         onChange={(event) => assignFamily(member.id, event.target.value)}
+                        onClick={(event) => event.stopPropagation()}
                         value={familyName}
                       >
                         {familyNames.map((family) => (
@@ -1058,6 +1190,7 @@ export default function GroupDetailView() {
                     <button
                       aria-label={`Remove ${name}`}
                       className="cursor-pointer text-text hover:text-secondary"
+                      onClick={(event) => event.stopPropagation()}
                     >
                       <UserMinus size={20} />
                     </button>
@@ -1104,55 +1237,70 @@ export default function GroupDetailView() {
             </div>
           </div>
 
-          <div
-            className={
-              isChatFullscreen
-                ? "min-h-0 flex-1 space-y-5 overflow-y-auto bg-surface px-8 py-6"
-                : "min-h-0 flex-1 space-y-7 overflow-y-auto bg-surface p-6"
-            }
-          >
-            {chatMessages.map((chatMessage, index) => {
-              const author =
-                chatMessage.author ||
-                chatMessage.senderUser?.displayName ||
-                chatMessage.senderUser?.email ||
-                "Member";
-              const text = chatMessage.text || chatMessage.content || "";
-              const isSelf =
-                chatMessage.tone === "self" || chatMessage.senderUserId === user?.id;
-              const time = chatMessage.time
-                ? chatMessage.time
-                : chatMessage.createdAt
-                  ? new Date(chatMessage.createdAt).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
-                  : "";
+          <div className="relative min-h-0 flex-1 bg-surface">
+            <div
+              ref={chatScrollRef}
+              className={
+                isChatFullscreen
+                  ? "h-full space-y-5 overflow-y-auto px-8 py-6"
+                  : "h-full space-y-7 overflow-y-auto p-6"
+              }
+              onScroll={handleChatScroll}
+            >
+              {chatMessages.map((chatMessage, index) => {
+                const author =
+                  chatMessage.author ||
+                  chatMessage.senderUser?.displayName ||
+                  chatMessage.senderUser?.email ||
+                  "Member";
+                const text = chatMessage.text || chatMessage.content || "";
+                const isSelf =
+                  chatMessage.tone === "self" || chatMessage.senderUserId === user?.id;
+                const time = chatMessage.time
+                  ? chatMessage.time
+                  : chatMessage.createdAt
+                    ? new Date(chatMessage.createdAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : "";
 
-              return (
-                <div key={chatMessage.id ?? `${author}-${index}`}>
-                  <div
-                    className={
-                      isSelf
-                        ? "mb-2 flex justify-end gap-3 text-sm"
-                        : "mb-2 flex gap-3 text-sm"
-                    }
-                  >
-                    <span className="font-bold text-text">{author}</span>
-                    <span>{time}</span>
+                return (
+                  <div key={chatMessage.id ?? `${author}-${index}`}>
+                    <div
+                      className={
+                        isSelf
+                          ? "mb-2 flex justify-end gap-3 text-sm"
+                          : "mb-2 flex gap-3 text-sm"
+                      }
+                    >
+                      <span className="font-bold text-text">{author}</span>
+                      <span>{time}</span>
+                    </div>
+                    <p
+                      className={
+                        isSelf
+                          ? "ml-auto max-w-[70%] rounded-lg bg-primary p-4 text-base text-background"
+                          : "max-w-[70%] rounded-lg bg-border p-4 text-base text-text"
+                      }
+                    >
+                      {text}
+                    </p>
                   </div>
-                  <p
-                    className={
-                      isSelf
-                        ? "ml-auto max-w-[70%] rounded-lg bg-primary p-4 text-base text-background"
-                        : "max-w-[70%] rounded-lg bg-border p-4 text-base text-text"
-                    }
-                  >
-                    {text}
-                  </p>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+
+            {hasUnreadRecentMessages ? (
+              <button
+                className="absolute bottom-4 right-4 z-10 inline-flex h-10 cursor-pointer items-center gap-2 rounded-full bg-primary px-4 text-sm font-extrabold text-background shadow-lg hover:opacity-90"
+                onClick={scrollChatToBottom}
+                type="button"
+              >
+                <ChevronDown size={17} />
+                Go to recent
+              </button>
+            ) : null}
           </div>
 
           <div className="flex shrink-0 gap-3 border-t border-border bg-neutral p-5">
