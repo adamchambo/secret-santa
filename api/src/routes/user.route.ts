@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createUser, deleteUser, getUser, updateUser } from "@/controllers/user/user.controller.js";
+import { createUser, deleteUser, getSharedProfile, getUser, updateUser } from "@/controllers/user/user.controller.js";
 import { createGiftOption, deleteGiftOption, getGiftOption, getGiftOptions, updateGiftOption } from "@/controllers/user/gift-option.controller.js";
 import { getPreferences, upsertPreferences } from "@/controllers/user/preference.controller.js";
 import { getSettings, upsertSettings } from "@/controllers/user/settings.controller.js";
@@ -182,6 +182,7 @@ export const userRouter: Router = Router();
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 userRouter.post('/', createUser);
+userRouter.get('/:userId/profile', requireAuth, getSharedProfile);
 /* auth */
 userRouter.use('/:userId', requireAuth, requireOwner)
 /* protected */

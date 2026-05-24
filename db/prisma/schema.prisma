@@ -17,6 +17,7 @@ model User {
   displayName String? 
   email String @unique
   icon String? 
+  description String?
 
   giftOptions GiftOption[]
   preferences Preference?
@@ -177,5 +178,4 @@ enum Currency {
   EUR
   GBP
 }
-
 

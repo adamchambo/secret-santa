@@ -96,11 +96,13 @@ export interface CreateUser {
   displayName?: string;
   email: string;
   icon?: string;
+  description?: string;
 }
 
 export interface UpdateUser {
   displayName?: string;
   icon?: string;
+  description?: string;
 }
 
 export interface User {
@@ -108,6 +110,7 @@ export interface User {
   displayName?: string;
   email: string;
   icon?: string;
+  description?: string;
 }
 
 export interface CreateGiftOption {

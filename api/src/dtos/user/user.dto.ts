@@ -5,7 +5,8 @@ interface UserDto {
   id: string;
   displayName?: string;
   email: string;
-  icon?: string
+  icon?: string;
+  description?: string;
 }
 
 export type CreateUserDto = UserDto;
@@ -18,4 +19,5 @@ export type UserResponseDto = {
   displayName?: string;
   email: string;
   icon?: string;
+  description?: string;
 }
