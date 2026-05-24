@@ -22,6 +22,7 @@ model User {
   preferences Preference?
   settings  Settings?
   groupMemberships GroupMember[]
+  joinRequests JoinRequest[]
   adminGroups Group[]
   sentMessages Message[]
 
@@ -67,9 +68,13 @@ model Group {
   id  String  @db.Uuid  @id @default(uuid())
   name  String
   eventDate DateTime? 
+  budgetLimit Float?
+  description String?
+  location String?
   adminId String @db.Uuid 
   admin User  @relation(fields: [adminId], references: [id])
   groupMembers  GroupMember[]
+  joinRequests JoinRequest[]
   chat Chat?
   isLocked  Boolean @default(false)
   createdAt DateTime  @default(now())
@@ -93,6 +98,18 @@ model GroupMember {
   joinedAt DateTime @default(now())
 
   @@unique([userId, groupId])
+}
+
+model JoinRequest {
+  id String @db.Uuid @id @default(uuid())
+  userId String @db.Uuid
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groupId String @db.Uuid
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  requestedAt DateTime @default(now())
+
+  @@unique([userId, groupId])
+  @@index([groupId])
 }
 
 model Family {
@@ -160,7 +177,5 @@ enum Currency {
   EUR
   GBP
 }
-
-
 
 
