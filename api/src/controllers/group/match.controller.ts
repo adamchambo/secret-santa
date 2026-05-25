@@ -1,4 +1,4 @@
-import { createMatchesByGroupId, deleteMatchesByGroupId, findMatchesByGroupId } from "@/services/group/match.service.js";
+import { createMatchesByGroupId, deleteMatchesByGroupId, findMatchesByGroupId } from "../../services/group/match.service.js";
 import { NextFunction, Request, Response } from "express";
 
 export async function getMatches(req: Request, res: Response, next: NextFunction) {

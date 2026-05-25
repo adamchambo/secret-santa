@@ -1,5 +1,5 @@
-import { db } from "@/clients/prisma.js";
-import { CreateFamilyDto, UpdateFamilyDto } from "@/dtos/group/family.dto.js";
+import { db } from "../../clients/prisma.js";
+import { CreateFamilyDto, UpdateFamilyDto } from "../../dtos/group/family.dto.js";
 
 export async function findFamiliesByGroupId(groupId: string) {
   return await db.family.findMany({

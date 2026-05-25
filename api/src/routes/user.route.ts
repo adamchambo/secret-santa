@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { createUser, deleteUser, getSharedProfile, getUser, updateUser } from "@/controllers/user/user.controller.js";
-import { createGiftOption, deleteGiftOption, getGiftOption, getGiftOptions, updateGiftOption } from "@/controllers/user/gift-option.controller.js";
-import { getPreferences, upsertPreferences } from "@/controllers/user/preference.controller.js";
-import { getSettings, upsertSettings } from "@/controllers/user/settings.controller.js";
-import { requireAuth, requireOwner, requireResourceOwner } from "@/middleware/auth.middleware.js";
-import { findGiftOptionById } from "@/services/user/gift-option.service.js";
+import { createUser, deleteUser, getSharedProfile, getUser, updateUser } from "../controllers/user/user.controller.js";
+import { createGiftOption, deleteGiftOption, getGiftOption, getGiftOptions, updateGiftOption } from "../controllers/user/gift-option.controller.js";
+import { getPreferences, upsertPreferences } from "../controllers/user/preference.controller.js";
+import { getSettings, upsertSettings } from "../controllers/user/settings.controller.js";
+import { requireAuth, requireOwner, requireResourceOwner } from "../middleware/auth.middleware.js";
+import { findGiftOptionById } from "../services/user/gift-option.service.js";
 
 export const userRouter: Router = Router();
 

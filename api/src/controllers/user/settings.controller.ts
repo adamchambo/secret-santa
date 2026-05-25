@@ -1,5 +1,5 @@
-import { UpsertSettingsDto } from "@/dtos/user/settings.dto.js";
-import { findSettingsByUserId, upsertSettingsByUserId } from "@/services/user/settings.service.js";
+import { UpsertSettingsDto } from "../../dtos/user/settings.dto.js";
+import { findSettingsByUserId, upsertSettingsByUserId } from "../../services/user/settings.service.js";
 import { Request, Response, NextFunction } from "express";
 
 export async function getSettings(req: Request, res: Response, next: NextFunction) {

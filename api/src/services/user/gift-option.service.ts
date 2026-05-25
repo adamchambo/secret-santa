@@ -1,6 +1,7 @@
-import { CreateGiftOptionDto, UpdateGiftOptionDto } from "@/dtos/user/gift-option.dto.js";
-import { db } from "@/clients/prisma.js";
-import { Prisma } from "@db/generated/prisma/client.js";
+import { CreateGiftOptionDto, UpdateGiftOptionDto } from "../../dtos/user/gift-option.dto.js";
+import { db } from "../../clients/prisma.js";
+// @ts-ignore - Prisma is generated outside the API rootDir but emits runtime JS.
+import { Prisma } from "../../../../db/generated/prisma/client.js";
 
 export async function findGiftOptionsByUserId(userId: string) {
   return await db.giftOption.findMany({ where: { userId } }); 

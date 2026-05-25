@@ -1,11 +1,11 @@
-import { CreateUserDto, UpdateUserDto } from "@/dtos/user/user.dto.js";
+import { CreateUserDto, UpdateUserDto } from "../../dtos/user/user.dto.js";
 import {
   findSharedUserProfile,
   findUserById,
   createUser as createUserService,
   updateUserById,
   deleteUserById,
-} from "@/services/user/user.service.js";
+} from "../../services/user/user.service.js";
 import { NextFunction, Request, Response } from "express";
 
 export async function getUser(req: Request, res: Response, next: NextFunction) {

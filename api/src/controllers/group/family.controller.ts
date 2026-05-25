@@ -1,5 +1,5 @@
-import { CreateFamilyDto, UpdateFamilyDto } from "@/dtos/group/family.dto.js";
-import { createFamilyByGroupId, deleteFamilyById, findFamiliesByGroupId, updateFamilyById } from "@/services/group/family.service.js";
+import { CreateFamilyDto, UpdateFamilyDto } from "../../dtos/group/family.dto.js";
+import { createFamilyByGroupId, deleteFamilyById, findFamiliesByGroupId, updateFamilyById } from "../../services/group/family.service.js";
 import { NextFunction, Request, Response } from "express";
 
 export async function getFamilies(req: Request, res: Response, next: NextFunction) {

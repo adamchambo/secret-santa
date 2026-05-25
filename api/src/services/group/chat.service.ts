@@ -1,4 +1,4 @@
-import { db } from "@/clients/prisma.js";
+import { db } from "../../clients/prisma.js";
 
 export async function findChatByGroupId(groupId: string) {
   return await db.chat.findUniqueOrThrow({

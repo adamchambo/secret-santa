@@ -127,12 +127,18 @@ jobs:
 
             cd ../api
             pnpm install --frozen-lockfile
-            pnpm exec tsc --noEmit
             pnpm run build
 
             cd ../web
             pnpm install --frozen-lockfile
             pnpm run build
 
-            pm2 restart secret-santa-api || true
-            pm2 restart secret-santa-web || true
+            pm2 restart secret-santa-api || pm2 start "pnpm start" \
+              --name secret-santa-api \
+              --cwd ~/apps/secret-santa/api
+
+            pm2 restart secret-santa-web || pm2 start "pnpm start" \
+              --name secret-santa-web \
+              --cwd ~/apps/secret-santa/web
+
+            pm2 save

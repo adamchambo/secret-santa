@@ -1,8 +1,8 @@
 import {
   CreateMessageDto,
   UpdateMessageDto,
-} from "@/dtos/group/message.dto.js";
-import { db } from "@/clients/prisma.js";
+} from "../../dtos/group/message.dto.js";
+import { db } from "../../clients/prisma.js";
 
 export async function findMessageById(messageId: string) {
   return db.message.findUnique({

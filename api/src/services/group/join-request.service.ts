@@ -1,4 +1,4 @@
-import { db } from "@/clients/prisma.js";
+import { db } from "../../clients/prisma.js";
 
 export async function findGroupByInviteCode(inviteCode: string) {
   const normalisedInviteCode = inviteCode.trim().toUpperCase();

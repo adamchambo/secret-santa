@@ -1,5 +1,5 @@
-import { CreateMessageDto } from "@/dtos/group/message.dto.js";
-import { createMessageByGroupId, deleteMessageById, editMessageById, findMessageById, findMessagesByGroupId } from "@/services/group/message.service.js";
+import { CreateMessageDto } from "../../dtos/group/message.dto.js";
+import { createMessageByGroupId, deleteMessageById, editMessageById, findMessageById, findMessagesByGroupId } from "../../services/group/message.service.js";
 import { NextFunction, Request, Response } from "express";
 
 export async function getMessage(req: Request, res: Response, next: NextFunction) {

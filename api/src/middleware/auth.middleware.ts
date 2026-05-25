@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { jwtVerify, createRemoteJWKSet, JWTPayload } from "jose";
 import "dotenv"; 
-import { findGroupById } from "@/services/group/group.service.js";
-import { findGroupMemberByUserId } from "@/services/group/group-member.service.js";
+import { findGroupById } from "../services/group/group.service.js";
+import { findGroupMemberByUserId } from "../services/group/group-member.service.js";
 
 declare global {
   namespace Express {

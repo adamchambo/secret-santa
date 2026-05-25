@@ -1,5 +1,5 @@
-import { CreateUserDto, UpdateUserDto } from "@/dtos/user/user.dto.js";
-import { db } from "@/clients/prisma.js";
+import { CreateUserDto, UpdateUserDto } from "../../dtos/user/user.dto.js";
+import { db } from "../../clients/prisma.js";
 
 export async function findUserById(id: string) {
   return db.user.findUniqueOrThrow({

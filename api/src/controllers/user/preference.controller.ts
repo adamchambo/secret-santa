@@ -1,5 +1,5 @@
-import { UpsertPreferenceDto } from "@/dtos/user/preference.dto.js";
-import { findPreferencesByUserId, upsertPreferencesByUserId } from "@/services/user/preference.service.js";
+import { UpsertPreferenceDto } from "../../dtos/user/preference.dto.js";
+import { findPreferencesByUserId, upsertPreferencesByUserId } from "../../services/user/preference.service.js";
 import { Request, Response, NextFunction } from "express";
 
 export async function getPreferences(req: Request, res: Response, next: NextFunction) {

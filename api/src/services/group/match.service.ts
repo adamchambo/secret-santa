@@ -1,6 +1,6 @@
-import { db } from "@/clients/prisma.js";
+import { db } from "../../clients/prisma.js";
 import { findGroupMembersByGroupId } from "./group-member.service.js";
-import { generateMatches } from "@/utils/match-generator.js";
+import { generateMatches } from "../../utils/match-generator.js";
 
 export async function findMatchesByGroupId(groupId: string) {
   return await db.match.findMany({

@@ -1,5 +1,5 @@
-import { CreateGroupMemberDto, UpdateGroupMemberDto } from "@/dtos/group/group-member.dto.js";
-import { findGroupMembersByGroupId, createGroupMemberByGroupId, updateGroupMemberById, deleteGroupMemberById } from "@/services/group/group-member.service.js";
+import { CreateGroupMemberDto, UpdateGroupMemberDto } from "../../dtos/group/group-member.dto.js";
+import { findGroupMembersByGroupId, createGroupMemberByGroupId, updateGroupMemberById, deleteGroupMemberById } from "../../services/group/group-member.service.js";
 import { NextFunction, Request, Response } from "express";
 
 export async function getGroupMembers(req: Request, res: Response, next: NextFunction) {

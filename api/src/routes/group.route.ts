@@ -41,8 +41,8 @@ import {
   requireGroupAdmin,
   requireGroupMember,
   requireResourceOwner,
-} from "@/middleware/auth.middleware.js";
-import { findMessageById } from "@/services/group/message.service.js";
+} from "../middleware/auth.middleware.js";
+import { findMessageById } from "../services/group/message.service.js";
 
 export const groupRouter: Router = Router();
 groupRouter.use(requireAuth);

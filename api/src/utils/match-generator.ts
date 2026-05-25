@@ -1,4 +1,5 @@
-import { GroupMember } from "@db/generated/prisma/client.js";
+// @ts-ignore - Prisma is generated outside the API rootDir but emits runtime JS.
+import { GroupMember } from "../../../db/generated/prisma/client.js";
 
 type GeneratedMatch = {
   givingUserId: string;

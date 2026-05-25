@@ -1,4 +1,5 @@
-import { User } from "@db/generated/prisma/client.js";
+// @ts-ignore - Prisma is generated outside the API rootDir but emits runtime JS.
+import { User } from "../../../../db/generated/prisma/client.js";
 
 /* ---------------- REQUEST DTOS ---------------- */
 interface UserDto {

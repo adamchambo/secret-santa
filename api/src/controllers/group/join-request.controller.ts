@@ -3,7 +3,7 @@ import {
   createJoinRequestByInviteCode,
   deleteJoinRequestById,
   findJoinRequestsByGroupId,
-} from "@/services/group/join-request.service.js";
+} from "../../services/group/join-request.service.js";
 import { NextFunction, Request, Response } from "express";
 
 export async function createJoinRequest(req: Request, res: Response, next: NextFunction) {

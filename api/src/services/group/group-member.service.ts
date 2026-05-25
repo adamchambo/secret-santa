@@ -1,5 +1,5 @@
-import { CreateGroupMemberDto, UpdateGroupMemberDto } from "@/dtos/group/group-member.dto.js";
-import { db } from "@/clients/prisma.js";
+import { CreateGroupMemberDto, UpdateGroupMemberDto } from "../../dtos/group/group-member.dto.js";
+import { db } from "../../clients/prisma.js";
 
 export async function findGroupMemberByUserId(userId: string, groupId: string) {
   return await db.groupMember.findUnique({

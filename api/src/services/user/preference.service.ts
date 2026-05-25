@@ -1,5 +1,5 @@
-import { UpsertPreferenceDto } from "@/dtos/user/preference.dto.js";
-import { db } from "@/clients/prisma.js";
+import { UpsertPreferenceDto } from "../../dtos/user/preference.dto.js";
+import { db } from "../../clients/prisma.js";
 
 export async function findPreferencesByUserId(userId: string) {
   return db.preference.findUnique({

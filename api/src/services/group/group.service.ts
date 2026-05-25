@@ -1,6 +1,7 @@
-import { db } from "@/clients/prisma.js";
-import { CreateGroupDto, UpdateGroupDto } from "@/dtos/group/group.dto.js";
-import { Prisma } from "@db/generated/prisma/client.js";
+import { db } from "../../clients/prisma.js";
+import { CreateGroupDto, UpdateGroupDto } from "../../dtos/group/group.dto.js";
+// @ts-ignore - Prisma is generated outside the API rootDir but emits runtime JS.
+import { Prisma } from "../../../../db/generated/prisma/client.js";
 import { nanoid } from "nanoid";
 
 export async function findGroupsByUserId(userId: string) {

@@ -1,5 +1,5 @@
-import { CreateGiftOptionDto, UpdateGiftOptionDto } from "@/dtos/user/gift-option.dto.js";
-import { findGiftOptionById, findGiftOptionsByUserId, createGiftOption as createGiftOptionService, updateGiftOptionById, deleteGiftOptionById } from "@/services/user/gift-option.service.js";
+import { CreateGiftOptionDto, UpdateGiftOptionDto } from "../../dtos/user/gift-option.dto.js";
+import { findGiftOptionById, findGiftOptionsByUserId, createGiftOption as createGiftOptionService, updateGiftOptionById, deleteGiftOptionById } from "../../services/user/gift-option.service.js";
 import { NextFunction, Request, Response } from "express";
 
 export async function getGiftOptions(req: Request, res: Response, next: NextFunction) {
