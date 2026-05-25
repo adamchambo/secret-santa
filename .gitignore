@@ -3,4 +3,11 @@ tables.png
 notes.txt
 remove-polling-after-testing.md
 .pnpm-store/
+
+db/generated/
+api/dist/
+web/.next/
+
 .env
+.env.*
+!.env.example

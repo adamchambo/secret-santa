@@ -37,14 +37,12 @@ export default function GroupsView() {
     const refreshOnVisible = () => {
       if (document.visibilityState === "visible") void refreshGroups();
     };
-    const intervalId = window.setInterval(refreshGroups, 1500);
 
     window.addEventListener("focus", refreshOnFocus);
     document.addEventListener("visibilitychange", refreshOnVisible);
 
     return () => {
       isActive = false;
-      window.clearInterval(intervalId);
       window.removeEventListener("focus", refreshOnFocus);
       document.removeEventListener("visibilitychange", refreshOnVisible);
     };

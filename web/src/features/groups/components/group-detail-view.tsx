@@ -82,6 +82,10 @@ type ApiMessage = {
   };
 };
 
+type GroupSocketEvent =
+  | { type: "chatMessage"; message: ApiMessage }
+  | { type: "matchesUpdated" };
+
 type ActionStatus = "idle" | "loading" | "success" | "error";
 
 const MATCH_REVEAL_STORAGE_KEY = "secret-santa.revealed-matches";
@@ -167,6 +171,15 @@ function isChatScrolledNearBottom(element: HTMLDivElement) {
     element.scrollHeight - element.scrollTop - element.clientHeight <=
     CHAT_BOTTOM_THRESHOLD_PX
   );
+}
+
+function isGroupSocketEvent(value: unknown): value is GroupSocketEvent {
+  if (typeof value !== "object" || value === null || !("type" in value)) {
+    return false;
+  }
+
+  const type = (value as { type?: unknown }).type;
+  return type === "chatMessage" || type === "matchesUpdated";
 }
 
 async function apiFetch<T>(path: string, init: RequestInit = {}) {
@@ -343,16 +356,37 @@ export default function GroupDetailView() {
     socket.onopen = () => setSocketStatus("open");
     socket.onclose = () => setSocketStatus("closed");
     socket.onerror = () => setSocketStatus("closed");
-    socket.onmessage = (event) => {
-      const incomingMessage = JSON.parse(event.data) as ApiMessage;
-      setChatMessages((messages) => mergeChatMessages(messages, [incomingMessage]));
+    socket.onmessage = async (event) => {
+      const payload = JSON.parse(event.data) as unknown;
+
+      if (isGroupSocketEvent(payload)) {
+        if (payload.type === "matchesUpdated") {
+          const nextMatches = await loadMatches();
+          setMatches(nextMatches);
+          if (nextMatches.length) {
+            setGroup((currentGroup) =>
+              currentGroup ? { ...currentGroup, isLocked: true } : currentGroup,
+            );
+          }
+          return;
+        }
+
+        setChatMessages((messages) =>
+          mergeChatMessages(messages, [payload.message]),
+        );
+        return;
+      }
+
+      setChatMessages((messages) =>
+        mergeChatMessages(messages, [payload as ApiMessage]),
+      );
     };
 
     return () => {
       socket.close();
       socketRef.current = null;
     };
-  }, [params.groupId]);
+  }, [loadMatches, params.groupId]);
 
   useEffect(() => {
     let isActive = true;
@@ -380,16 +414,12 @@ export default function GroupDetailView() {
     const refreshOnVisible = () => {
       if (document.visibilityState === "visible") void refreshMatches();
     };
-    const intervalId = window.setInterval(() => {
-      void refreshMatches();
-    }, 1500);
 
     window.addEventListener("focus", refreshOnFocus);
     document.addEventListener("visibilitychange", refreshOnVisible);
 
     return () => {
       isActive = false;
-      window.clearInterval(intervalId);
       window.removeEventListener("focus", refreshOnFocus);
       document.removeEventListener("visibilitychange", refreshOnVisible);
     };
@@ -432,16 +462,12 @@ export default function GroupDetailView() {
     const refreshOnVisible = () => {
       if (document.visibilityState === "visible") void refreshChatMessages();
     };
-    const intervalId = window.setInterval(() => {
-      void refreshChatMessages();
-    }, 1500);
 
     window.addEventListener("focus", refreshOnFocus);
     document.addEventListener("visibilitychange", refreshOnVisible);
 
     return () => {
       isActive = false;
-      window.clearInterval(intervalId);
       window.removeEventListener("focus", refreshOnFocus);
       document.removeEventListener("visibilitychange", refreshOnVisible);
     };
@@ -569,6 +595,9 @@ export default function GroupDetailView() {
       setGroup((currentGroup) =>
         currentGroup ? { ...currentGroup, isLocked: true } : currentGroup,
       );
+      if (socketRef.current?.readyState === WebSocket.OPEN) {
+        socketRef.current.send(JSON.stringify({ type: "matchesUpdated" }));
+      }
       setIsMatchRevealed(false);
       setRerollStatus("success");
       showActionFeedback("Matches rerolled.", "success");
@@ -697,7 +726,9 @@ export default function GroupDetailView() {
       setChatMessages((messages) => mergeChatMessages(messages, [createdMessage]));
 
       if (socketRef.current?.readyState === WebSocket.OPEN) {
-        socketRef.current.send(JSON.stringify(createdMessage));
+        socketRef.current.send(
+          JSON.stringify({ type: "chatMessage", message: createdMessage }),
+        );
       }
 
       setMessage("");
