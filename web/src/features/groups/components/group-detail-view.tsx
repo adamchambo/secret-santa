@@ -23,6 +23,7 @@ import {
 import AddFamilyModal, { FamilyModalParticipant } from "./add-family-modal";
 import { useAuth } from "@/src/features/auth/context/auth-provider";
 import { getAuthOptions } from "@/src/lib/api/auth-options";
+import { getApiUrl, getWebSocketUrl } from "@/src/lib/api/base-url";
 import {
   deleteGroupsGroupId,
   Family,
@@ -193,11 +194,11 @@ async function apiFetch<T>(path: string, init: RequestInit = {}) {
       ...init.headers,
     },
   };
-  let response = await fetch(`http://localhost:5001/api${path}`, requestInit);
+  let response = await fetch(getApiUrl(path), requestInit);
 
   if (response.status === 401) {
     const refreshedAuthOptions = await getAuthOptions({ forceRefresh: true });
-    response = await fetch(`http://localhost:5001/api${path}`, {
+    response = await fetch(getApiUrl(path), {
       ...requestInit,
       headers: {
         ...requestInit.headers,
@@ -347,10 +348,7 @@ export default function GroupDetailView() {
 
   useEffect(() => {
     const groupId = params.groupId;
-    const wsBaseUrl =
-      process.env.NEXT_PUBLIC_WS_URL ??
-      `${window.location.protocol === "https:" ? "wss" : "ws"}://localhost:5001`;
-    const socket = new WebSocket(`${wsBaseUrl}/api/groups/${groupId}/chat/ws`);
+    const socket = new WebSocket(getWebSocketUrl(`/api/groups/${groupId}/chat/ws`));
 
     socketRef.current = socket;
     socket.onopen = () => setSocketStatus("open");

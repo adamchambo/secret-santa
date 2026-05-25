@@ -92,6 +92,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
           NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
+          ORVAL_API_BASE_URL: ${{ secrets.ORVAL_API_BASE_URL }}
 
   deploy:
     name: Deploy on Ubuntu server
@@ -130,6 +131,10 @@ jobs:
             pnpm run build
 
             cd ../web
+            export NEXT_PUBLIC_SUPABASE_URL="${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}"
+            export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}"
+            export NEXT_PUBLIC_API_BASE_URL="${{ secrets.NEXT_PUBLIC_API_BASE_URL }}"
+            export ORVAL_API_BASE_URL="${{ secrets.ORVAL_API_BASE_URL }}"
             pnpm install --frozen-lockfile
             pnpm run build
 

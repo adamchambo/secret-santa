@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { Check, KeyRound } from "lucide-react";
 import { getAuthOptions } from "@/src/lib/api/auth-options";
+import { getApiUrl } from "@/src/lib/api/base-url";
 import { useAuth } from "@/src/features/auth/context/auth-provider";
 import { ensureBackendUser } from "@/src/features/auth/api";
 
@@ -28,7 +29,7 @@ export default function JoinGroupView() {
     try {
       await ensureBackendUser(user);
       const authOptions = await getAuthOptions({ forceRefresh: true });
-      const response = await fetch("http://localhost:5001/api/groups/join-requests", {
+      const response = await fetch(getApiUrl("/groups/join-requests"), {
         ...authOptions,
         method: "POST",
         headers: {

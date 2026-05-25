@@ -218,7 +218,7 @@ export const getGetGroupsUrl = () => {
 
 
 
-  return `http://localhost:5001/api/groups`
+  return `https://api.secret-santa.adamchamberla.in/api/groups`
 }
 
 /**
@@ -249,7 +249,7 @@ export const getPostGroupsUrl = () => {
 
 
 
-  return `http://localhost:5001/api/groups`
+  return `https://api.secret-santa.adamchamberla.in/api/groups`
 }
 
 /**
@@ -281,7 +281,7 @@ export const getGetGroupsGroupIdUrl = (groupId: string,) => {
 
 
 
-  return `http://localhost:5001/api/groups/${groupId}`
+  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}`
 }
 
 /**
@@ -312,7 +312,7 @@ export const getPutGroupsGroupIdUrl = (groupId: string,) => {
 
 
 
-  return `http://localhost:5001/api/groups/${groupId}`
+  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}`
 }
 
 /**
@@ -345,7 +345,7 @@ export const getDeleteGroupsGroupIdUrl = (groupId: string,) => {
 
 
 
-  return `http://localhost:5001/api/groups/${groupId}`
+  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}`
 }
 
 /**
@@ -376,7 +376,7 @@ export const getGetGroupsGroupIdMembersUrl = (groupId: string,) => {
 
 
 
-  return `http://localhost:5001/api/groups/${groupId}/members`
+  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/members`
 }
 
 /**
@@ -407,7 +407,7 @@ export const getPostGroupsGroupIdMembersUrl = (groupId: string,) => {
 
 
 
-  return `http://localhost:5001/api/groups/${groupId}/members`
+  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/members`
 }
 
 /**
@@ -441,7 +441,7 @@ export const getPutGroupsGroupIdMembersMemberIdUrl = (groupId: string,
 
 
 
-  return `http://localhost:5001/api/groups/${groupId}/members/${memberId}`
+  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/members/${memberId}`
 }
 
 /**
@@ -476,7 +476,7 @@ export const getDeleteGroupsGroupIdMembersMemberIdUrl = (groupId: string,
 
 
 
-  return `http://localhost:5001/api/groups/${groupId}/members/${memberId}`
+  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/members/${memberId}`
 }
 
 /**
@@ -508,7 +508,7 @@ export const getGetGroupsGroupIdFamiliesUrl = (groupId: string,) => {
 
 
 
-  return `http://localhost:5001/api/groups/${groupId}/families`
+  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/families`
 }
 
 /**
@@ -539,7 +539,7 @@ export const getPostGroupsGroupIdFamiliesUrl = (groupId: string,) => {
 
 
 
-  return `http://localhost:5001/api/groups/${groupId}/families`
+  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/families`
 }
 
 /**
@@ -573,7 +573,7 @@ export const getPutGroupsGroupIdFamiliesFamilyIdUrl = (groupId: string,
 
 
 
-  return `http://localhost:5001/api/groups/${groupId}/families/${familyId}`
+  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/families/${familyId}`
 }
 
 /**
@@ -608,7 +608,7 @@ export const getDeleteGroupsGroupIdFamiliesFamilyIdUrl = (groupId: string,
 
 
 
-  return `http://localhost:5001/api/groups/${groupId}/families/${familyId}`
+  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/families/${familyId}`
 }
 
 /**
@@ -640,7 +640,7 @@ export const getGetGroupsGroupIdMatchesUrl = (groupId: string,) => {
 
 
 
-  return `http://localhost:5001/api/groups/${groupId}/matches`
+  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/matches`
 }
 
 /**
@@ -671,7 +671,7 @@ export const getPostGroupsGroupIdMatchesUrl = (groupId: string,) => {
 
 
 
-  return `http://localhost:5001/api/groups/${groupId}/matches`
+  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/matches`
 }
 
 /**
@@ -703,7 +703,7 @@ export const getDeleteGroupsGroupIdMatchesMatchIdUrl = (groupId: string,
 
 
 
-  return `http://localhost:5001/api/groups/${groupId}/matches/${matchId}`
+  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/matches/${matchId}`
 }
 
 /**
@@ -735,7 +735,7 @@ export const getGetGroupsGroupIdChatMessagesUrl = (groupId: string,) => {
 
 
 
-  return `http://localhost:5001/api/groups/${groupId}/chat/messages`
+  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/chat/messages`
 }
 
 /**
@@ -766,7 +766,7 @@ export const getPostGroupsGroupIdChatMessagesUrl = (groupId: string,) => {
 
 
 
-  return `http://localhost:5001/api/groups/${groupId}/chat/messages`
+  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/chat/messages`
 }
 
 /**
@@ -800,7 +800,7 @@ export const getPutGroupsGroupIdChatMessagesMessageIdUrl = (groupId: string,
 
 
 
-  return `http://localhost:5001/api/groups/${groupId}/chat/messages/${messageId}`
+  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/chat/messages/${messageId}`
 }
 
 /**
@@ -835,7 +835,7 @@ export const getDeleteGroupsGroupIdChatMessagesMessageIdUrl = (groupId: string,
 
 
 
-  return `http://localhost:5001/api/groups/${groupId}/chat/messages/${messageId}`
+  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/chat/messages/${messageId}`
 }
 
 /**
@@ -867,7 +867,7 @@ export const getPostUsersUrl = () => {
 
 
 
-  return `http://localhost:5001/api/users`
+  return `https://api.secret-santa.adamchamberla.in/api/users`
 }
 
 /**
@@ -899,7 +899,7 @@ export const getGetUsersUserIdUrl = (userId: string,) => {
 
 
 
-  return `http://localhost:5001/api/users/${userId}`
+  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}`
 }
 
 /**
@@ -930,7 +930,7 @@ export const getPutUsersUserIdUrl = (userId: string,) => {
 
 
 
-  return `http://localhost:5001/api/users/${userId}`
+  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}`
 }
 
 /**
@@ -963,7 +963,7 @@ export const getDeleteUsersUserIdUrl = (userId: string,) => {
 
 
 
-  return `http://localhost:5001/api/users/${userId}`
+  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}`
 }
 
 /**
@@ -994,7 +994,7 @@ export const getGetUsersUserIdGiftOptionsUrl = (userId: string,) => {
 
 
 
-  return `http://localhost:5001/api/users/${userId}/gift-options`
+  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}/gift-options`
 }
 
 /**
@@ -1025,7 +1025,7 @@ export const getPostUsersUserIdGiftOptionsUrl = (userId: string,) => {
 
 
 
-  return `http://localhost:5001/api/users/${userId}/gift-options`
+  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}/gift-options`
 }
 
 /**
@@ -1059,7 +1059,7 @@ export const getGetUsersUserIdGiftOptionsGiftOptionIdUrl = (userId: string,
 
 
 
-  return `http://localhost:5001/api/users/${userId}/gift-options/${giftOptionId}`
+  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}/gift-options/${giftOptionId}`
 }
 
 /**
@@ -1092,7 +1092,7 @@ export const getPutUsersUserIdGiftOptionsGiftOptionIdUrl = (userId: string,
 
 
 
-  return `http://localhost:5001/api/users/${userId}/gift-options/${giftOptionId}`
+  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}/gift-options/${giftOptionId}`
 }
 
 /**
@@ -1127,7 +1127,7 @@ export const getDeleteUsersUserIdGiftOptionsGiftOptionIdUrl = (userId: string,
 
 
 
-  return `http://localhost:5001/api/users/${userId}/gift-options/${giftOptionId}`
+  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}/gift-options/${giftOptionId}`
 }
 
 /**
@@ -1159,7 +1159,7 @@ export const getGetUsersUserIdPreferencesUrl = (userId: string,) => {
 
 
 
-  return `http://localhost:5001/api/users/${userId}/preferences`
+  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}/preferences`
 }
 
 /**
@@ -1190,7 +1190,7 @@ export const getPutUsersUserIdPreferencesUrl = (userId: string,) => {
 
 
 
-  return `http://localhost:5001/api/users/${userId}/preferences`
+  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}/preferences`
 }
 
 /**
@@ -1223,7 +1223,7 @@ export const getGetUsersUserIdSettingsUrl = (userId: string,) => {
 
 
 
-  return `http://localhost:5001/api/users/${userId}/settings`
+  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}/settings`
 }
 
 /**
@@ -1254,7 +1254,7 @@ export const getPutUsersUserIdSettingsUrl = (userId: string,) => {
 
 
 
-  return `http://localhost:5001/api/users/${userId}/settings`
+  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}/settings`
 }
 
 /**

@@ -17,6 +17,7 @@ import {
 import { useAuth } from "@/src/features/auth/context/auth-provider";
 import { ensureBackendUser } from "@/src/features/auth/api";
 import { getAuthOptions } from "@/src/lib/api/auth-options";
+import { getApiUrl } from "@/src/lib/api/base-url";
 import {
   deleteUsersUserIdGiftOptionsGiftOptionId,
   GiftOption,
@@ -71,7 +72,7 @@ async function updateProfileUser(
   forceRefreshToken = false,
 ) {
   const authOptions = await getAuthOptions({ forceRefresh: forceRefreshToken });
-  const response = await fetch(`http://localhost:5001/api/users/${userId}`, {
+  const response = await fetch(getApiUrl(`/users/${userId}`), {
     ...authOptions,
     method: "PUT",
     headers: {

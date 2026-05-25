@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Gift, PartyPopper, Shirt, Users, WheatOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getAuthOptions } from "@/src/lib/api/auth-options";
+import { getApiUrl } from "@/src/lib/api/base-url";
 import { GiftOption, Preference, User } from "@/src/lib/api/generated/client";
 
 type SharedProfile = {
@@ -16,7 +17,7 @@ type SharedProfile = {
 
 async function fetchSharedProfile(userId: string) {
   const authOptions = await getAuthOptions();
-  const response = await fetch(`http://localhost:5001/api/users/${userId}/profile`, {
+  const response = await fetch(getApiUrl(`/users/${userId}/profile`), {
     ...authOptions,
     cache: "no-store",
   });
