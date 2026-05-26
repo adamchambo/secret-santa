@@ -224,6 +224,8 @@ export default function GroupDetailView() {
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
   const shouldStickToChatBottomRef = useRef(true);
   const [group, setGroup] = useState<ApiGroup | null>(null);
+  const [isLoadingGroup, setIsLoadingGroup] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [members, setMembers] = useState<ApiMember[]>([]);
   const [families, setFamilies] = useState<Family[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
@@ -258,6 +260,7 @@ export default function GroupDetailView() {
   const [socketStatus, setSocketStatus] = useState<"connecting" | "open" | "closed">(
     "connecting",
   );
+  const activeGroupId = group?.id;
 
   function showActionFeedback(message: string, status: "success" | "error") {
     setActionMessage(message);
@@ -333,10 +336,18 @@ export default function GroupDetailView() {
 
     async function load() {
       await Promise.resolve();
+      setIsLoadingGroup(true);
+      setLoadError("");
       try {
         await loadGroupData();
+        if (isActive) setLoadError("");
       } catch {
-        if (isActive) setGroup(null);
+        if (isActive) {
+          setGroup(null);
+          setLoadError("Could not load this group.");
+        }
+      } finally {
+        if (isActive) setIsLoadingGroup(false);
       }
     }
 
@@ -347,8 +358,9 @@ export default function GroupDetailView() {
   }, [loadGroupData]);
 
   useEffect(() => {
-    const groupId = params.groupId;
-    const socket = new WebSocket(getWebSocketUrl(`/api/groups/${groupId}/chat/ws`));
+    if (!activeGroupId) return;
+
+    const socket = new WebSocket(getWebSocketUrl(`/api/groups/${activeGroupId}/chat/ws`));
 
     socketRef.current = socket;
     socket.onopen = () => setSocketStatus("open");
@@ -384,7 +396,7 @@ export default function GroupDetailView() {
       socket.close();
       socketRef.current = null;
     };
-  }, [loadMatches, params.groupId]);
+  }, [activeGroupId, loadMatches]);
 
   useEffect(() => {
     let isActive = true;
@@ -735,12 +747,23 @@ export default function GroupDetailView() {
     }
   }
 
+  if (isLoadingGroup && !group) {
+    return (
+      <section className="flex h-full items-center justify-center bg-background px-4 py-6 text-center text-text sm:px-6 md:px-10">
+        <h1 className="font-heading text-3xl font-extrabold text-primary">
+          Loading...
+        </h1>
+      </section>
+    );
+  }
+
   if (!group) {
     return (
-      <section className="h-full bg-background px-10 py-8 text-text">
+      <section className="h-full bg-background px-4 py-6 text-text sm:px-6 md:px-10 md:py-8">
         <h1 className="font-heading text-3xl font-extrabold text-primary">
           Group not found
         </h1>
+        {loadError ? <p className="mt-2 text-text-muted">{loadError}</p> : null}
         <Link className="mt-4 inline-block font-bold hover:text-primary" href="/groups">
           Back to groups
         </Link>
@@ -778,50 +801,60 @@ export default function GroupDetailView() {
           onClick={() => setIsChatFullscreen(false)}
         />
       ) : null}
-      <section className="grid h-full overflow-hidden bg-background px-6 py-6 text-text md:px-10 xl:grid-cols-[minmax(0,1fr)_24rem] xl:gap-8">
-        <div className="min-h-0 overflow-y-auto pr-2">
+      <section className="grid h-full overflow-hidden bg-background px-4 py-5 text-text sm:px-6 md:px-10 md:py-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:gap-8">
+        <div className="min-h-0 overflow-y-auto pb-20 pr-0 sm:pr-2 xl:pb-0">
           <div className="mb-5">
-            <div className="flex flex-wrap items-center gap-4">
-              <h1 className="font-heading text-3xl font-extrabold text-primary">
+            <nav className="mb-3 flex min-w-0 items-center gap-2 text-sm font-bold text-text-muted">
+              <Link className="shrink-0 hover:text-primary" href="/groups">
+                Groups
+              </Link>
+              <span aria-hidden="true">/</span>
+              <span className="min-w-0 truncate text-text">{group.name}</span>
+            </nav>
+
+            <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
+              <h1 className="min-w-0 break-words font-heading text-3xl font-extrabold text-primary">
                 {group.name}
               </h1>
               {isAdmin ? (
-                <span className="rounded-sm border border-text-muted px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary">
+                <span className="w-fit rounded-sm border border-text-muted px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary">
                   Admin
                 </span>
               ) : null}
-              <span className="ml-auto rounded-xl bg-primary/20 px-4 py-2 text-sm font-extrabold uppercase tracking-widest text-primary">
-                {matches.length ? "matched" : "pending"}
-              </span>
-              <div className="flex -space-x-2">
-                {participants.slice(0, 3).map((participant) => (
-                  <span
-                    key={participant.email}
-                    className="flex size-9 items-center justify-center rounded-full bg-border text-xs font-bold text-text ring-2 ring-background"
-                  >
-                    {participant.initials}
-                  </span>
-                ))}
-                <span className="flex size-9 items-center justify-center rounded-full bg-primary text-xs font-bold text-background ring-2 ring-background">
-                  +{Math.max(participants.length - 3, 0)}
+              <div className="flex flex-wrap items-center gap-3 sm:ml-auto">
+                <span className="w-fit rounded-xl bg-primary/20 px-4 py-2 text-sm font-extrabold uppercase tracking-widest text-primary">
+                  {matches.length ? "matched" : "pending"}
                 </span>
+                <div className="flex -space-x-2">
+                  {participants.slice(0, 3).map((participant) => (
+                    <span
+                      key={participant.email}
+                      className="flex size-9 items-center justify-center rounded-full bg-border text-xs font-bold text-text ring-2 ring-background"
+                    >
+                      {participant.initials}
+                    </span>
+                  ))}
+                  <span className="flex size-9 items-center justify-center rounded-full bg-primary text-xs font-bold text-background ring-2 ring-background">
+                    +{Math.max(participants.length - 3, 0)}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="mb-6 flex flex-wrap items-center gap-4 rounded-lg border border-border bg-neutral p-4">
+          <div className="mb-6 flex flex-col gap-4 rounded-lg border border-border bg-neutral p-4 sm:flex-row sm:flex-wrap sm:items-center">
             <div className="flex items-center gap-4 font-extrabold">
               <ShieldCheck size={26} className="text-primary" />
               {isAdmin ? "Administrative Actions" : "Group Actions"}
             </div>
-            <div className="ml-auto flex flex-wrap gap-3">
+            <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:flex lg:w-auto lg:flex-wrap xl:ml-auto">
               <button
                 className={
                   inviteCopyStatus === "copied"
-                    ? "inline-flex h-11 cursor-pointer items-center gap-3 rounded border border-primary/40 bg-primary/20 px-4 font-bold text-primary"
+                    ? "inline-flex h-11 cursor-pointer items-center justify-center gap-3 rounded border border-primary/40 bg-primary/20 px-4 font-bold text-primary"
                     : inviteCopyStatus === "failed"
-                      ? "inline-flex h-11 cursor-pointer items-center gap-3 rounded border border-secondary/50 bg-tertiary px-4 font-bold text-secondary"
-                      : "inline-flex h-11 cursor-pointer items-center gap-3 rounded border border-border px-4 font-bold hover:bg-surface"
+                      ? "inline-flex h-11 cursor-pointer items-center justify-center gap-3 rounded border border-secondary/50 bg-tertiary px-4 font-bold text-secondary"
+                      : "inline-flex h-11 cursor-pointer items-center justify-center gap-3 rounded border border-border px-4 font-bold hover:bg-surface"
                 }
                 onClick={copyInviteCode}
               >
@@ -835,21 +868,21 @@ export default function GroupDetailView() {
               {isAdmin ? (
                 <>
                   <button
-                    className="inline-flex h-11 cursor-pointer items-center gap-3 rounded border border-border px-4 font-bold hover:bg-surface"
+                    className="inline-flex h-11 cursor-pointer items-center justify-center gap-3 rounded border border-border px-4 font-bold hover:bg-surface"
                     onClick={startEditingGroup}
                   >
                     <Pencil size={18} />
                     Edit Group
                   </button>
                   <button
-                    className="inline-flex h-11 cursor-pointer items-center gap-3 rounded border border-border px-4 font-bold hover:bg-surface"
+                    className="inline-flex h-11 cursor-pointer items-center justify-center gap-3 rounded border border-border px-4 font-bold hover:bg-surface"
                     onClick={() => setIsAddFamilyOpen(true)}
                   >
                     <Users size={18} />
                     Add Family
                   </button>
                   <button
-                    className="inline-flex h-11 cursor-pointer items-center gap-3 rounded border border-border px-4 font-bold hover:bg-surface disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex h-11 cursor-pointer items-center justify-center gap-3 rounded border border-border px-4 font-bold hover:bg-surface disabled:cursor-not-allowed disabled:opacity-60"
                     disabled={rerollStatus === "loading"}
                     onClick={rerollMatches}
                   >
@@ -860,7 +893,7 @@ export default function GroupDetailView() {
                     {rerollStatus === "loading" ? "Generating..." : matchActionLabel}
                   </button>
                   <button
-                    className="inline-flex h-11 cursor-pointer items-center gap-3 rounded border border-secondary/50 px-4 font-bold text-secondary hover:bg-tertiary disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex h-11 cursor-pointer items-center justify-center gap-3 rounded border border-secondary/50 px-4 font-bold text-secondary hover:bg-tertiary disabled:cursor-not-allowed disabled:opacity-60"
                     disabled={deleteStatus === "loading"}
                     onClick={deleteGroup}
                   >
@@ -985,7 +1018,7 @@ export default function GroupDetailView() {
 
               <div className="mt-5 flex justify-end">
                 <button
-                  className="h-11 cursor-pointer rounded bg-primary px-6 font-extrabold text-background hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="h-11 w-full cursor-pointer rounded bg-primary px-6 font-extrabold text-background hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                   disabled={saveStatus === "loading"}
                   onClick={saveGroupDetails}
                 >
@@ -997,7 +1030,7 @@ export default function GroupDetailView() {
 
           {isAdmin && joinRequests.length > 0 ? (
             <section className="mb-6 rounded-lg border border-border bg-surface p-5">
-              <div className="mb-4 flex items-center justify-between gap-4">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
                 <h2 className="font-heading text-xl font-extrabold text-text">
                   Join Requests
                 </h2>
@@ -1012,17 +1045,17 @@ export default function GroupDetailView() {
                   return (
                     <div
                       key={request.id}
-                      className="flex flex-wrap items-center gap-4 rounded bg-neutral px-4 py-3"
+                      className="grid gap-4 rounded bg-neutral px-4 py-3 sm:grid-cols-[auto_minmax(0,1fr)] lg:flex lg:flex-wrap lg:items-center"
                     >
                       <div className="flex size-11 items-center justify-center rounded-xl bg-border font-extrabold text-text">
                         {getInitials(name)}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-extrabold text-text">{name}</p>
-                        <p className="text-sm text-text-muted">{request.user.email}</p>
+                      <div className="min-w-0">
+                        <p className="break-words font-extrabold text-text">{name}</p>
+                        <p className="break-words text-sm text-text-muted">{request.user.email}</p>
                       </div>
                       <button
-                        className="h-10 cursor-pointer rounded bg-primary px-4 font-extrabold text-background hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="h-10 cursor-pointer rounded bg-primary px-4 font-extrabold text-background hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-1 lg:ml-auto"
                         disabled={
                           activeRequestId === request.id &&
                           activeRequestAction === "accept"
@@ -1035,7 +1068,7 @@ export default function GroupDetailView() {
                           : "Accept"}
                       </button>
                       <button
-                        className="h-10 cursor-pointer rounded border border-border px-4 font-extrabold text-text hover:bg-tertiary disabled:cursor-not-allowed disabled:opacity-60"
+                        className="h-10 cursor-pointer rounded border border-border px-4 font-extrabold text-text hover:bg-tertiary disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-1"
                         disabled={
                           activeRequestId === request.id &&
                           activeRequestAction === "decline"
@@ -1066,7 +1099,7 @@ export default function GroupDetailView() {
               </p>
               {isMatchRevealed ? (
                 <button
-                  className="mt-6 flex max-w-sm animate-[matchReveal_500ms_ease-out] cursor-pointer items-center gap-4 rounded-lg bg-neutral p-4 text-left text-text shadow-lg transition hover:-translate-y-0.5 hover:bg-tertiary"
+                  className="mt-6 flex w-full max-w-sm animate-[matchReveal_500ms_ease-out] cursor-pointer items-center gap-4 rounded-lg bg-neutral p-4 text-left text-text shadow-lg transition hover:-translate-y-0.5 hover:bg-tertiary"
                   onClick={() => {
                     if (myMatchMember) router.push(`/profile/${myMatchMember.userId}`);
                   }}
@@ -1084,19 +1117,19 @@ export default function GroupDetailView() {
                       getInitials(myMatchName)
                     )}
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs font-bold uppercase tracking-widest text-text-muted">
                       Your Match
                     </p>
-                    <p className="text-xl font-extrabold text-primary">{myMatchName}</p>
-                    <p className="text-sm text-text">
+                    <p className="break-words text-xl font-extrabold text-primary">{myMatchName}</p>
+                    <p className="break-words text-sm text-text">
                       {myMatchMember?.user?.email ?? "Profile hidden until invite accepted"}
                     </p>
                   </div>
                 </button>
               ) : (
                 <button
-                  className="mt-6 h-12 cursor-pointer rounded bg-neutral px-8 text-base font-extrabold text-text hover:bg-tertiary disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mt-6 h-12 w-full cursor-pointer rounded bg-neutral px-8 text-base font-extrabold text-text hover:bg-tertiary disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                   disabled={!matches.length || isMatchRevealing}
                   onClick={revealMatch}
                 >
@@ -1110,18 +1143,18 @@ export default function GroupDetailView() {
             </section>
 
             <section className="rounded-lg bg-surface p-6">
-              <div className="grid grid-cols-2 gap-8">
-                <div>
+              <div className="grid gap-6 sm:grid-cols-2 sm:gap-8">
+                <div className="min-w-0">
                   <p className="text-sm uppercase tracking-widest text-text">Budget</p>
-                  <p className="mt-2 text-2xl font-extrabold text-primary">
+                  <p className="mt-2 break-words text-2xl font-extrabold text-primary">
                     ${(group.budgetLimit ?? 0).toFixed(2)}
                   </p>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm uppercase tracking-widest text-text">
                     Exchange Date
                   </p>
-                  <p className="mt-2 text-2xl font-extrabold text-primary">
+                  <p className="mt-2 break-words text-2xl font-extrabold text-primary">
                     {group.eventDate
                       ? new Date(group.eventDate).toLocaleDateString("en-AU", {
                           day: "numeric",
@@ -1133,13 +1166,13 @@ export default function GroupDetailView() {
               </div>
               <div className="mt-8 flex items-center gap-4 border-t border-border pt-6">
                 <MapPin size={26} className="text-primary" />
-                <p className="text-lg">{group.location || "Location not set"}</p>
+                <p className="min-w-0 break-words text-lg">{group.location || "Location not set"}</p>
               </div>
             </section>
           </div>
 
           <section className="mt-6">
-            <div className="mb-5 flex items-center justify-between">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-heading text-2xl font-extrabold text-text">
                 Participants
               </h2>
@@ -1158,7 +1191,7 @@ export default function GroupDetailView() {
                 return (
                   <div
                     key={member.id}
-                    className="flex w-full cursor-pointer items-center gap-5 rounded bg-neutral px-5 py-3 text-left transition hover:bg-tertiary"
+                    className="grid w-full cursor-pointer gap-4 rounded bg-neutral px-4 py-4 text-left transition hover:bg-tertiary sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center lg:flex lg:gap-5 lg:px-5 lg:py-3"
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
@@ -1181,20 +1214,20 @@ export default function GroupDetailView() {
                         getInitials(name)
                       )}
                     </div>
-                    <div>
-                      <p className="text-lg font-extrabold text-text">{name}</p>
-                      <p className="text-sm text-text-muted">{member.user?.email}</p>
+                    <div className="min-w-0">
+                      <p className="break-words text-lg font-extrabold text-text">{name}</p>
+                      <p className="break-words text-sm text-text-muted">{member.user?.email}</p>
                     </div>
                     <label
-                      className="relative ml-auto"
+                      className="relative sm:col-span-2 lg:col-span-1 lg:ml-auto"
                       onClick={(event) => event.stopPropagation()}
                     >
                       <select
                         aria-label={`Assign ${name} to family`}
                         className={
                           familyName === "None"
-                            ? "h-9 cursor-pointer appearance-none rounded-xl bg-border px-4 pr-9 text-xs font-bold uppercase tracking-widest text-text outline-none hover:bg-tertiary"
-                            : "h-9 cursor-pointer appearance-none rounded-xl bg-primary/20 px-4 pr-9 text-xs font-bold uppercase tracking-widest text-primary outline-none hover:bg-tertiary"
+                            ? "h-9 w-full cursor-pointer appearance-none rounded-xl bg-border px-4 pr-9 text-xs font-bold uppercase tracking-widest text-text outline-none hover:bg-tertiary lg:w-auto"
+                            : "h-9 w-full cursor-pointer appearance-none rounded-xl bg-primary/20 px-4 pr-9 text-xs font-bold uppercase tracking-widest text-primary outline-none hover:bg-tertiary lg:w-auto"
                         }
                         disabled={!isAdmin || familyStatus === "loading"}
                         onChange={(event) => assignFamily(member.id, event.target.value)}
@@ -1213,7 +1246,7 @@ export default function GroupDetailView() {
                       />
                     </label>
 
-                    <span className="rounded-xl bg-primary/20 px-4 py-2 text-xs font-bold uppercase tracking-widest text-primary">
+                    <span className="w-fit rounded-xl bg-primary/20 px-4 py-2 text-xs font-bold uppercase tracking-widest text-primary">
                       joined
                     </span>
                     <button

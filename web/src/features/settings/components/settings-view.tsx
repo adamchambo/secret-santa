@@ -68,8 +68,8 @@ export default function SettingsView() {
   }
 
   return (
-    <section className="h-full overflow-hidden bg-background px-6 py-8 text-text md:px-[10vw]">
-      <div className="mx-auto flex h-full max-w-4xl flex-col">
+    <section className="h-full overflow-y-auto bg-background px-4 py-6 text-text sm:px-6 md:px-[10vw] md:py-8">
+      <div className="mx-auto flex min-h-full max-w-4xl flex-col">
         <header className="mb-7">
           <h1 className="font-heading text-3xl font-extrabold text-primary">
             Settings
@@ -80,18 +80,18 @@ export default function SettingsView() {
         </header>
 
         <div className="space-y-6">
-          <section className="rounded-lg bg-surface p-6">
+          <section className="rounded-lg bg-surface p-4 sm:p-6">
             <h2 className="mb-4 text-sm font-extrabold uppercase tracking-widest text-text">
               App Settings
             </h2>
 
             <div className="space-y-1">
-              <div className="flex items-center justify-between gap-6 rounded bg-neutral p-4">
-                <div className="flex items-center gap-5">
+              <div className="grid gap-4 rounded bg-neutral p-4 sm:flex sm:items-center sm:justify-between sm:gap-6">
+                <div className="flex min-w-0 items-center gap-4 sm:gap-5">
                   <div className="flex size-11 items-center justify-center rounded-xl bg-primary/20 text-primary">
                     <Globe2 size={24} />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h3 className="text-lg font-extrabold text-text">Language</h3>
                     <p className="text-sm text-text">
                       Select your preferred display language
@@ -99,18 +99,18 @@ export default function SettingsView() {
                   </div>
                 </div>
 
-                <button className="inline-flex h-11 cursor-pointer items-center gap-5 rounded-md bg-border px-4 font-semibold text-text hover:bg-tertiary">
+                <button className="inline-flex h-11 w-full cursor-pointer items-center justify-center gap-5 rounded-md bg-border px-4 font-semibold text-text hover:bg-tertiary sm:w-auto">
                   English (Australia)
                   <ChevronDown size={18} />
                 </button>
               </div>
 
-              <div className="flex items-center justify-between gap-6 rounded bg-neutral p-4">
-                <div className="flex items-center gap-5">
+              <div className="grid gap-4 rounded bg-neutral p-4 sm:flex sm:items-center sm:justify-between sm:gap-6">
+                <div className="flex min-w-0 items-center gap-4 sm:gap-5">
                   <div className="flex size-11 items-center justify-center rounded-xl bg-tertiary text-text">
                     <Moon size={23} />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h3 className="text-lg font-extrabold text-text">Appearance</h3>
                     <p className="text-sm text-text">
                       Switch between light and dark interface
@@ -118,7 +118,7 @@ export default function SettingsView() {
                   </div>
                 </div>
 
-                <div className="flex rounded-2xl bg-border p-1">
+                <div className="grid grid-cols-2 rounded-2xl bg-border p-1 sm:flex">
                   <button
                     className={
                       theme === "light"
@@ -144,22 +144,22 @@ export default function SettingsView() {
             </div>
           </section>
 
-          <section className="rounded-lg bg-surface p-6">
+          <section className="rounded-lg bg-surface p-4 sm:p-6">
             <h2 className="mb-4 text-sm font-extrabold uppercase tracking-widest text-text">
               Account
             </h2>
 
             <div className="space-y-1">
               <button
-                className="flex w-full cursor-pointer items-center justify-between gap-6 rounded bg-neutral p-4 text-left hover:bg-tertiary"
+                className="flex w-full cursor-pointer items-center justify-between gap-4 rounded bg-neutral p-4 text-left hover:bg-tertiary sm:gap-6"
                 disabled={isLoggingOut}
                 onClick={() => setIsConfirmingLogout(true)}
               >
-                <div className="flex items-center gap-5">
+                <div className="flex min-w-0 items-center gap-4 sm:gap-5">
                   <div className="flex size-11 items-center justify-center rounded-xl bg-border text-text">
                     <LogOut size={23} />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h3 className="text-lg font-extrabold text-text">Logout</h3>
                     <p className="text-sm text-text">
                       Sign out of your active session
@@ -170,9 +170,9 @@ export default function SettingsView() {
               </button>
 
               {isConfirmingLogout ? (
-                <div className="flex items-center justify-between gap-6 rounded bg-neutral p-4">
+                <div className="grid gap-4 rounded bg-neutral p-4 sm:flex sm:items-center sm:justify-between sm:gap-6">
                   <p className="font-bold text-text">Are you sure you want to logout?</p>
-                  <div className="flex shrink-0 gap-3">
+                  <div className="grid gap-3 sm:flex sm:shrink-0">
                     <button
                       className="h-10 cursor-pointer rounded border border-border px-4 font-extrabold text-text hover:bg-tertiary"
                       disabled={isLoggingOut}
@@ -195,12 +195,12 @@ export default function SettingsView() {
         </div>
 
         <section className="mt-auto pt-6">
-          <div className="flex items-center justify-between gap-6 rounded-lg border border-secondary/40 border-l-4 border-l-secondary bg-secondary/10 p-4">
-            <div className="flex items-center gap-5">
+          <div className="grid gap-4 rounded-lg border border-secondary/40 border-l-4 border-l-secondary bg-secondary/10 p-4 sm:flex sm:items-center sm:justify-between sm:gap-6">
+            <div className="flex min-w-0 items-center gap-4 sm:gap-5">
               <div className="flex size-11 items-center justify-center rounded-xl bg-secondary/20 text-secondary">
                 <Trash2 size={22} />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h2 className="text-lg font-extrabold text-secondary">
                   Delete Account
                 </h2>
@@ -212,7 +212,7 @@ export default function SettingsView() {
               </div>
             </div>
 
-            <div className="flex shrink-0 gap-3">
+            <div className="grid gap-3 sm:flex sm:shrink-0">
               {isConfirmingDelete ? (
                 <button
                   className="h-11 cursor-pointer rounded-md border border-secondary px-5 font-extrabold text-secondary hover:bg-secondary/10"

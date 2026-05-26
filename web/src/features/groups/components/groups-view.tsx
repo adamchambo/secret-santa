@@ -8,14 +8,16 @@ import { getGroups, Group } from "@/src/lib/api/generated/client";
 
 export default function GroupsView() {
   const [groups, setGroups] = useState<Group[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const tabletPlaceholderCount = groups.length > 0 ? (2 - (groups.length % 2)) % 2 : 0;
   const desktopPlaceholderCount = groups.length > 0 ? (3 - (groups.length % 3)) % 3 : 0;
   const placeholderCount = Math.max(tabletPlaceholderCount, desktopPlaceholderCount);
 
   const loadGroups = useCallback(async () => {
-    const response = await getGroups(await getAuthOptions()).catch(
-      () => [],
-    );
+    const response = await getGroups(await getAuthOptions());
+    if (!Array.isArray(response)) throw new Error("Groups response was not a list");
     return Array.isArray(response) ? response : [];
   }, []);
 
@@ -25,8 +27,21 @@ export default function GroupsView() {
     async function refreshGroups() {
       await Promise.resolve();
       if (!isActive) return;
-      const nextGroups = await loadGroups();
-      if (isActive) setGroups(nextGroups);
+      setIsLoading(true);
+      setLoadError("");
+
+      try {
+        const nextGroups = await loadGroups();
+        if (!isActive) return;
+        setGroups(nextGroups);
+        setHasLoaded(true);
+      } catch {
+        if (!isActive) return;
+        setLoadError("Could not load groups.");
+        setHasLoaded(true);
+      } finally {
+        if (isActive) setIsLoading(false);
+      }
     }
 
     refreshGroups();
@@ -48,8 +63,11 @@ export default function GroupsView() {
     };
   }, [loadGroups]);
 
+  const showStatusPanel =
+    (isLoading && !hasLoaded) || (Boolean(loadError) && groups.length === 0) || groups.length === 0;
+
   return (
-    <section className="flex h-full flex-col overflow-hidden bg-background px-6 py-8 text-text md:px-[8vw] lg:px-[10vw]">
+    <section className="flex h-full flex-col overflow-hidden bg-background px-4 py-6 text-text sm:px-6 md:px-[8vw] md:py-8 lg:px-[10vw]">
       <div className="mx-auto mb-8 flex w-full max-w-6xl flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-heading text-3xl font-extrabold text-primary">
@@ -60,16 +78,16 @@ export default function GroupsView() {
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="grid gap-3 sm:flex sm:flex-wrap">
           <Link
-            className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-extrabold text-background shadow-sm hover:opacity-90"
+            className="inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-extrabold text-background shadow-sm hover:opacity-90 sm:w-auto"
             href="/join"
           >
             <LogIn size={18} />
             Join Group
           </Link>
           <Link
-            className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-extrabold text-background shadow-sm hover:opacity-90"
+            className="inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-extrabold text-background shadow-sm hover:opacity-90 sm:w-auto"
             href="/create"
           >
             <Plus size={18} />
@@ -78,14 +96,18 @@ export default function GroupsView() {
         </div>
       </div>
 
-      {groups.length === 0 ? (
-        <div className="flex min-h-0 w-full max-w-6xl flex-1 items-center justify-center rounded-lg border border-border bg-surface p-8 text-center">
+      {showStatusPanel ? (
+        <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 items-center justify-center rounded-lg border border-border bg-surface p-6 text-center sm:p-8">
           <div>
             <h2 className="font-heading text-2xl font-extrabold text-primary">
-              No groups yet
+              {isLoading && !hasLoaded
+                ? "Loading..."
+                : loadError
+                  ? "Groups not found"
+                  : "No groups yet"}
             </h2>
             <p className="mt-2 text-text-muted">
-              Create a group or request to join one with an invite code.
+              {loadError || "Create a group or request to join one with an invite code."}
             </p>
           </div>
         </div>

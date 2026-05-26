@@ -11,6 +11,9 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Secret Santa",
   description: "Placeholder",
+  icons: {
+    icon: "/icon.png",
+  },
 };
 
 export default function RootLayout({

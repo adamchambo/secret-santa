@@ -330,11 +330,11 @@ export default function ProfileView() {
     .toUpperCase();
 
   return (
-    <section className="h-full overflow-hidden bg-background px-6 py-6 text-text md:px-[10vw]">
+    <section className="h-full overflow-y-auto bg-background px-4 py-5 text-text sm:px-6 md:px-[10vw] md:py-6">
       <div className="mx-auto max-w-5xl space-y-6">
-        <section className="rounded-lg bg-surface p-6 md:p-7">
-          <div className="flex flex-col gap-6 md:flex-row md:items-center">
-            <div className="relative h-40 w-40 shrink-0 overflow-hidden rounded-xl border-4 border-neutral bg-tertiary shadow-sm">
+        <section className="rounded-lg bg-surface p-5 md:p-7">
+          <div className="flex flex-col items-center gap-6 text-center md:flex-row md:items-center md:text-left">
+            <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-xl border-4 border-neutral bg-tertiary shadow-sm sm:h-40 sm:w-40">
               {profilePhoto ? (
                 <Image
                   alt="Profile"
@@ -346,7 +346,7 @@ export default function ProfileView() {
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-tertiary">
-                  <div className="flex size-24 items-center justify-center rounded-full bg-neutral text-4xl font-extrabold text-primary shadow-sm">
+                  <div className="flex size-20 items-center justify-center rounded-full bg-neutral text-3xl font-extrabold text-primary shadow-sm sm:size-24 sm:text-4xl">
                     {initials}
                   </div>
                 </div>
@@ -368,11 +368,11 @@ export default function ProfileView() {
               </button>
             </div>
 
-            <div className="max-w-2xl flex-1">
+            <div className="w-full max-w-2xl flex-1">
               {isEditingProfile ? (
                 <div className="space-y-3">
                   <input
-                    className="h-11 w-full rounded bg-neutral px-4 font-heading text-2xl font-extrabold text-primary outline-none focus:ring-2 focus:ring-primary"
+                    className="h-11 w-full rounded bg-neutral px-4 font-heading text-xl font-extrabold text-primary outline-none focus:ring-2 focus:ring-primary sm:text-2xl"
                     onChange={(event) => setDisplayName(event.target.value)}
                     value={displayName}
                   />
@@ -390,13 +390,13 @@ export default function ProfileView() {
                   <h1 className="font-heading text-3xl font-extrabold text-primary">
                     {displayName || appUser?.email}
                   </h1>
-                  <p className="mt-3 text-base leading-7 text-text">{description}</p>
+                  <p className="mt-3 break-words text-base leading-7 text-text">{description}</p>
                 </>
               )}
 
-              <div className="mt-4 flex flex-wrap gap-3">
+              <div className="mt-4 grid gap-3 sm:flex sm:flex-wrap">
                 <button
-                  className="inline-flex h-10 cursor-pointer items-center gap-2 rounded bg-primary px-4 text-sm font-extrabold text-background hover:opacity-90"
+                  className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded bg-primary px-4 text-sm font-extrabold text-background hover:opacity-90"
                   onClick={
                     isEditingProfile
                       ? saveProfileDetails
@@ -408,7 +408,7 @@ export default function ProfileView() {
                 </button>
                 {profilePhoto ? (
                   <button
-                    className="inline-flex h-10 cursor-pointer items-center gap-2 rounded border border-secondary px-4 text-sm font-extrabold text-secondary hover:bg-tertiary"
+                    className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded border border-secondary px-4 text-sm font-extrabold text-secondary hover:bg-tertiary"
                     onClick={removeProfilePhoto}
                   >
                     <Trash2 size={16} />
@@ -421,9 +421,9 @@ export default function ProfileView() {
         </section>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_20rem]">
-          <section className="rounded-lg bg-surface p-6">
-            <div className="mb-5 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
+          <section className="rounded-lg bg-surface p-5 sm:p-6">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex min-w-0 items-center gap-3">
                 <Gift size={25} className="text-text" />
                 <h2 className="font-heading text-xl font-extrabold text-text">
                   My Top 5 Gift Options
@@ -441,8 +441,8 @@ export default function ProfileView() {
                   key={gift.id}
                   className={
                     draggedGiftIndex === index
-                      ? "flex cursor-grabbing items-center justify-between gap-4 rounded bg-tertiary px-5 py-3 opacity-70"
-                      : "flex cursor-grab items-center justify-between gap-4 rounded bg-neutral px-5 py-3"
+                      ? "grid cursor-grabbing gap-4 rounded bg-tertiary px-4 py-3 opacity-70 sm:flex sm:items-center sm:justify-between sm:px-5"
+                      : "grid cursor-grab gap-4 rounded bg-neutral px-4 py-3 sm:flex sm:items-center sm:justify-between sm:px-5"
                   }
                   onDragEnd={() => setDraggedGiftIndex(null)}
                   onDragOver={(event) => event.preventDefault()}
@@ -465,7 +465,7 @@ export default function ProfileView() {
                     </div>
                   </div>
 
-                  <div className="flex shrink-0 items-center gap-3">
+                  <div className="flex shrink-0 items-center justify-end gap-3">
                     <GripVertical size={20} className="text-text-muted" />
                     <button
                       aria-label={`Remove ${gift.name}`}
@@ -479,9 +479,9 @@ export default function ProfileView() {
               ))}
             </ol>
 
-            <div className="mt-4 flex gap-3">
+            <div className="mt-4 grid gap-3 sm:flex">
               <input
-                className="min-w-0 flex-1 rounded bg-neutral px-4 text-sm outline-none placeholder:text-text-muted focus:ring-2 focus:ring-primary"
+                className="h-11 min-w-0 flex-1 rounded bg-neutral px-4 text-sm outline-none placeholder:text-text-muted focus:ring-2 focus:ring-primary"
                 disabled={giftOptions.length >= 5}
                 onChange={(event) => setNewGift(event.target.value)}
                 onKeyDown={(event) => {
@@ -495,7 +495,7 @@ export default function ProfileView() {
                 value={newGift}
               />
               <button
-                className="inline-flex h-11 cursor-pointer items-center gap-2 rounded bg-primary px-4 text-sm font-extrabold text-background hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded bg-primary px-4 text-sm font-extrabold text-background hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                 disabled={giftOptions.length >= 5 || !newGift.trim()}
                 onClick={addGiftOption}
               >
@@ -510,7 +510,7 @@ export default function ProfileView() {
               <h2 className="mb-4 text-sm font-bold uppercase tracking-widest text-text-muted">
                 Event Status
               </h2>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <Users size={30} className="text-primary" />
                 <p>
                   <span className="mr-3 text-3xl font-extrabold text-primary">
@@ -522,7 +522,7 @@ export default function ProfileView() {
             </section>
 
             <section className="rounded-lg bg-surface p-6">
-              <div className="mb-5 flex items-center justify-between gap-3">
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
                 <h2 className="text-sm font-bold uppercase tracking-widest text-text-muted">
                   Quick Preferences
                 </h2>

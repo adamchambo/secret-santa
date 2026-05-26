@@ -6,8 +6,8 @@ export default function VerifyEmailPage() {
   useEmailVerfication();
 
   return (
-    <div className="flex min-h-72 flex-col items-center justify-center text-center text-text">
-      <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-2xl">
+    <div className="flex min-h-56 flex-col items-center justify-center text-center text-text sm:min-h-72">
+      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-2xl sm:mb-5 sm:h-14 sm:w-14">
         ✉
       </div>
       <h1 className="mb-3 text-2xl font-bold">Verify your email</h1>

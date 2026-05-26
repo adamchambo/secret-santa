@@ -104,7 +104,7 @@ export default function SharedProfileView({ userId }: { userId: string }) {
   const profileDescription = profile.user.description?.trim();
 
   return (
-    <section className="h-full overflow-hidden bg-background px-6 py-6 text-text md:px-[10vw]">
+    <section className="h-full overflow-y-auto bg-background px-4 py-5 text-text sm:px-6 md:px-[10vw] md:py-6">
       <div className="mx-auto max-w-5xl space-y-6">
         <Link
           className="inline-block cursor-pointer text-sm font-bold uppercase tracking-widest text-text-muted hover:text-primary"
@@ -113,9 +113,9 @@ export default function SharedProfileView({ userId }: { userId: string }) {
           Groups
         </Link>
 
-        <section className="rounded-lg bg-surface p-6 md:p-7">
-          <div className="flex flex-col gap-6 md:flex-row md:items-center">
-            <div className="relative h-40 w-40 shrink-0 overflow-hidden rounded-xl border-4 border-neutral bg-tertiary shadow-sm">
+        <section className="rounded-lg bg-surface p-5 md:p-7">
+          <div className="flex flex-col items-center gap-6 text-center md:flex-row md:items-center md:text-left">
+            <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-xl border-4 border-neutral bg-tertiary shadow-sm sm:h-40 sm:w-40">
               {profilePhoto ? (
                 <Image
                   alt={profileName}
@@ -127,21 +127,21 @@ export default function SharedProfileView({ userId }: { userId: string }) {
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-tertiary">
-                  <div className="flex size-24 items-center justify-center rounded-full bg-neutral text-4xl font-extrabold text-primary shadow-sm">
+                  <div className="flex size-20 items-center justify-center rounded-full bg-neutral text-3xl font-extrabold text-primary shadow-sm sm:size-24 sm:text-4xl">
                     {getInitials(profileName)}
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="max-w-2xl flex-1">
+            <div className="w-full max-w-2xl flex-1">
               <h1 className="font-heading text-3xl font-extrabold text-primary">
                 {profileName}
               </h1>
               <p className="mt-2 break-all text-sm text-text-muted">
                 {profile.user.email}
               </p>
-              <p className="mt-4 text-base leading-7 text-text">
+              <p className="mt-4 break-words text-base leading-7 text-text">
                 {profileDescription || "No profile description added yet."}
               </p>
             </div>
@@ -149,9 +149,9 @@ export default function SharedProfileView({ userId }: { userId: string }) {
         </section>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_20rem]">
-          <section className="rounded-lg bg-surface p-6">
-            <div className="mb-5 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
+          <section className="rounded-lg bg-surface p-5 sm:p-6">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex min-w-0 items-center gap-3">
                 <Gift size={25} className="text-text" />
                 <h2 className="font-heading text-xl font-extrabold text-text">
                   Gift Options
@@ -195,11 +195,11 @@ export default function SharedProfileView({ userId }: { userId: string }) {
           </section>
 
           <aside className="space-y-6">
-            <section className="rounded-lg bg-surface p-6">
+            <section className="rounded-lg bg-surface p-5 sm:p-6">
               <h2 className="mb-4 text-sm font-bold uppercase tracking-widest text-text-muted">
                 Event Status
               </h2>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <Users size={30} className="text-primary" />
                 <p>
                   <span className="mr-3 text-3xl font-extrabold text-primary">
@@ -210,7 +210,7 @@ export default function SharedProfileView({ userId }: { userId: string }) {
               </div>
             </section>
 
-            <section className="rounded-lg bg-surface p-6">
+            <section className="rounded-lg bg-surface p-5 sm:p-6">
               <h2 className="mb-5 text-sm font-bold uppercase tracking-widest text-text-muted">
                 Quick Preferences
               </h2>

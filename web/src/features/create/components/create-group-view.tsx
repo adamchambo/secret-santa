@@ -63,20 +63,20 @@ export default function CreateGroupView() {
   }
 
   return (
-    <section className="h-full overflow-hidden bg-background px-6 py-16 text-text md:px-[10vw]">
-      <div className="mx-auto grid max-w-5xl gap-10 lg:grid-cols-[20rem_minmax(0,1fr)]">
+    <section className="h-full overflow-y-auto bg-background px-4 py-8 text-text sm:px-6 md:px-[10vw] md:py-12">
+      <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[20rem_minmax(0,1fr)] lg:gap-10">
         <aside>
-          <h1 className="font-heading text-4xl font-extrabold text-primary">
+          <h1 className="font-heading text-3xl font-extrabold text-primary sm:text-4xl">
             Create Group
           </h1>
-          <p className="mt-4 max-w-sm text-lg leading-8 text-text">
+          <p className="mt-4 max-w-sm text-base leading-7 text-text sm:text-lg sm:leading-8">
             Establish your festive exchange protocol. Define the boundaries,
             dates, and spirit of your Secret Santa group.
           </p>
         </aside>
 
         <form
-          className="rounded-lg border border-border bg-surface p-8 shadow-sm"
+          className="rounded-lg border border-border bg-surface p-5 shadow-sm sm:p-8"
           onSubmit={handleSubmit}
         >
           <div className="mb-8 border-l-4 border-secondary pl-4">
@@ -90,7 +90,7 @@ export default function CreateGroupView() {
               Group Name
             </span>
             <input
-              className="mt-3 h-14 w-full rounded-md bg-neutral px-5 text-lg text-text outline-none placeholder:text-text-muted/40 focus:ring-2 focus:ring-primary"
+              className="mt-3 h-12 w-full rounded-md bg-neutral px-4 text-base text-text outline-none placeholder:text-text-muted/40 focus:ring-2 focus:ring-primary sm:h-14 sm:px-5 sm:text-lg"
               onChange={(event) => setName(event.target.value)}
               placeholder="e.g. Winter Workshop 2024"
               required
@@ -103,10 +103,10 @@ export default function CreateGroupView() {
               <span className="text-xs font-bold uppercase tracking-widest text-text">
                 Budget Limit ($)
               </span>
-              <div className="mt-3 flex h-14 items-center rounded-md bg-neutral px-5 focus-within:ring-2 focus-within:ring-primary">
+              <div className="mt-3 flex h-12 items-center rounded-md bg-neutral px-4 focus-within:ring-2 focus-within:ring-primary sm:h-14 sm:px-5">
                 <span className="mr-3 text-lg font-bold text-text">$</span>
                 <input
-                  className="min-w-0 flex-1 bg-transparent text-lg text-text outline-none placeholder:text-text-muted/40"
+                  className="min-w-0 flex-1 bg-transparent text-base text-text outline-none placeholder:text-text-muted/40 sm:text-lg"
                   min="0"
                   onChange={(event) => setBudgetLimit(event.target.value)}
                   placeholder="50.00"
@@ -120,9 +120,9 @@ export default function CreateGroupView() {
               <span className="text-xs font-bold uppercase tracking-widest text-text">
                 Exchange Date
               </span>
-              <div className="mt-3 flex h-14 items-center rounded-md bg-neutral px-5 focus-within:ring-2 focus-within:ring-primary">
+              <div className="mt-3 flex h-12 items-center rounded-md bg-neutral px-4 focus-within:ring-2 focus-within:ring-primary sm:h-14 sm:px-5">
                 <input
-                  className="min-w-0 flex-1 bg-transparent text-lg text-text outline-none"
+                  className="min-w-0 flex-1 bg-transparent text-base text-text outline-none sm:text-lg"
                   onChange={(event) => setEventDate(event.target.value)}
                   type="date"
                   value={eventDate}
@@ -137,21 +137,21 @@ export default function CreateGroupView() {
               Description & Rules
             </span>
             <textarea
-              className="mt-3 h-36 w-full resize-none rounded-md bg-neutral px-5 py-4 text-lg text-text outline-none placeholder:text-text-muted/40 focus:ring-2 focus:ring-primary"
+              className="mt-3 h-36 w-full resize-none rounded-md bg-neutral px-4 py-4 text-base text-text outline-none placeholder:text-text-muted/40 focus:ring-2 focus:ring-primary sm:px-5 sm:text-lg"
               onChange={(event) => setDescription(event.target.value)}
               placeholder="Include any special instructions or themes..."
               value={description}
             />
           </label>
 
-          <div className="mt-10 flex items-center justify-between border-t border-border pt-8">
+          <div className="mt-10 grid gap-3 border-t border-border pt-8 sm:flex sm:items-center sm:justify-between">
             <Link
-              className="cursor-pointer px-4 py-3 text-lg font-bold text-text hover:text-primary"
+              className="inline-flex h-12 cursor-pointer items-center justify-center rounded border border-border px-4 text-base font-bold text-text hover:bg-tertiary hover:text-primary sm:h-auto sm:border-0 sm:py-3 sm:text-lg"
               href="/groups"
             >
               Cancel
             </Link>
-            <button className="h-14 cursor-pointer rounded bg-primary px-10 text-lg font-extrabold text-background shadow-md hover:opacity-90">
+            <button className="h-12 cursor-pointer rounded bg-primary px-6 text-base font-extrabold text-background shadow-md hover:opacity-90 sm:h-14 sm:px-10 sm:text-lg">
               Initialize Group
             </button>
           </div>
