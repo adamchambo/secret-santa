@@ -360,7 +360,7 @@ export default function GroupDetailView() {
   useEffect(() => {
     if (!activeGroupId) return;
 
-    const socket = new WebSocket(getWebSocketUrl(`/api/groups/${activeGroupId}/chat/ws`));
+    const socket = new WebSocket(getWebSocketUrl(`/groups/${activeGroupId}/chat/ws`));
 
     socketRef.current = socket;
     socket.onopen = () => setSocketStatus("open");

@@ -6,10 +6,9 @@ export function getApiUrl(path: string) {
 }
 
 export function getWebSocketUrl(path: string) {
-  const apiOrigin = API_BASE_URL.replace(/\/api\/?$/, "");
   const wsBaseUrl =
     process.env.NEXT_PUBLIC_WS_URL ??
-    apiOrigin.replace(/^https:/, "wss:").replace(/^http:/, "ws:");
+    API_BASE_URL.replace(/^https:/, "wss:").replace(/^http:/, "ws:");
 
   return `${wsBaseUrl}${path}`;
 }
