@@ -797,8 +797,9 @@ export default function GroupDetailView() {
       {isChatFullscreen ? (
         <button
           aria-label="Close fullscreen chat backdrop"
-          className="fixed inset-0 z-30 cursor-default bg-black/35 backdrop-blur-sm"
+          className="fixed inset-0 z-40 cursor-default bg-black/35 backdrop-blur-sm"
           onClick={() => setIsChatFullscreen(false)}
+          type="button"
         />
       ) : null}
       <section className="grid h-full overflow-hidden bg-background px-4 py-5 text-text sm:px-6 md:px-10 md:py-6 xl:grid-cols-[minmax(0,1fr)_24rem] xl:gap-8">
@@ -1266,7 +1267,7 @@ export default function GroupDetailView() {
         <aside
           className={
             isChatFullscreen
-              ? "fixed left-1/2 top-1/2 z-40 flex h-[min(820px,calc(100vh-4rem))] w-[min(760px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg border border-border bg-neutral shadow-2xl"
+              ? "fixed left-1/2 top-1/2 z-50 flex h-[min(820px,calc(100vh-4rem))] w-[min(760px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg border border-border bg-neutral shadow-2xl"
               : "hidden min-h-0 overflow-hidden rounded-lg border border-border bg-neutral shadow-sm xl:flex xl:flex-col"
           }
         >
@@ -1387,9 +1388,10 @@ export default function GroupDetailView() {
 
         {!isChatFullscreen ? (
           <button
-            className="fixed bottom-20 right-6 z-30 flex size-12 cursor-pointer items-center justify-center rounded-full bg-primary text-background shadow-lg hover:opacity-90 xl:hidden"
+            className="fixed bottom-[calc(env(safe-area-inset-bottom)+5rem)] right-4 z-50 flex size-14 cursor-pointer items-center justify-center rounded-full bg-primary text-background shadow-lg hover:opacity-90 xl:hidden"
             onClick={() => setIsChatFullscreen(true)}
             aria-label="Open fullscreen chat"
+            type="button"
           >
             <Expand size={22} />
           </button>
