@@ -1,5 +1,6 @@
 import 'dotenv/config'; 
 import express, { json, urlencoded } from "express";
+import http from "node:http";
 import cors from "cors"; 
 import { secure } from "./middleware/secure.middleware.js";
 import { logger } from "./middleware/logger.middleare.js";
@@ -43,8 +44,10 @@ app.use(errorHandler);
 
 
 /* ---------------- SERVER ---------------- */
-const server = app.listen(PORT, () => {
-  console.log(`Server listening on port: ${URL}:${PORT}`);
-});
+const server = http.createServer(app);
 
 attachGroupChatWebSocketServer(server);
+
+server.listen(PORT, () => {
+  console.log(`Server listening on port: ${URL}:${PORT}`);
+});
