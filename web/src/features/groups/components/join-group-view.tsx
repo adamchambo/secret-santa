@@ -4,9 +4,9 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { Check, KeyRound } from "lucide-react";
 import { getAuthOptions } from "@/src/lib/api/auth-options";
-import { getApiUrl } from "@/src/lib/api/base-url";
 import { useAuth } from "@/src/features/auth/context/auth-provider";
 import { ensureBackendUser } from "@/src/features/auth/api";
+import { postGroupsJoinRequests } from "@/src/lib/api/generated/client";
 
 type JoinRequestResponse = {
   status: "requested" | "already-member";
@@ -28,26 +28,15 @@ export default function JoinGroupView() {
 
     try {
       await ensureBackendUser(user);
-      const authOptions = await getAuthOptions({ forceRefresh: true });
-      const response = await fetch(getApiUrl("/groups/join-requests"), {
-        ...authOptions,
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...authOptions.headers,
-        },
-        body: JSON.stringify({ inviteCode: code }),
-      });
-      const body = await response.text();
-      const payload = body ? JSON.parse(body) : null;
+      const result = (await postGroupsJoinRequests(
+        { inviteCode: code },
+        await getAuthOptions({ forceRefresh: true }),
+      )) as JoinRequestResponse;
 
-      if (!response.ok) {
-        const message =
-          payload?.error ?? payload?.message ?? "Could not request to join.";
-        throw new Error(message);
+      if (!result?.status || !result.group?.name) {
+        throw new Error("Could not request to join.");
       }
 
-      const result = payload as JoinRequestResponse;
       setInviteCode("");
       setJoinStatus("success");
       setJoinMessage(

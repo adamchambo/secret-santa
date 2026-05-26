@@ -16,3 +16,7 @@ export function getWebSocketUrl(path: string) {
 
   return joinBaseUrl(wsBaseUrl, path);
 }
+
+export function getGroupChatWebSocketUrl(groupId: string) {
+  return getWebSocketUrl(`/groups/${encodeURIComponent(groupId)}/chat/ws`);
+}

@@ -23,16 +23,22 @@ import {
 import AddFamilyModal, { FamilyModalParticipant } from "./add-family-modal";
 import { useAuth } from "@/src/features/auth/context/auth-provider";
 import { getAuthOptions } from "@/src/lib/api/auth-options";
-import { getApiUrl, getWebSocketUrl } from "@/src/lib/api/base-url";
+import { getGroupChatWebSocketUrl } from "@/src/lib/api/base-url";
 import {
   deleteGroupsGroupId,
+  deleteGroupsGroupIdJoinRequestsRequestId,
   Family,
   getGroupsGroupId,
+  getGroupsGroupIdChatMessages,
   getGroupsGroupIdFamilies,
+  getGroupsGroupIdJoinRequests,
   getGroupsGroupIdMatches,
+  getGroupsGroupIdMembers,
   Group,
   Match,
+  postGroupsGroupIdChatMessages,
   postGroupsGroupIdFamilies,
+  postGroupsGroupIdJoinRequestsRequestIdAccept,
   postGroupsGroupIdMatches,
   putGroupsGroupId,
   putGroupsGroupIdMembersMemberId,
@@ -183,38 +189,6 @@ function isGroupSocketEvent(value: unknown): value is GroupSocketEvent {
   return type === "chatMessage" || type === "matchesUpdated";
 }
 
-async function apiFetch<T>(path: string, init: RequestInit = {}) {
-  const authOptions = await getAuthOptions();
-  const requestInit = {
-    ...init,
-    cache: "no-store" as RequestCache,
-    headers: {
-      ...(init.body ? { "Content-Type": "application/json" } : {}),
-      ...authOptions.headers,
-      ...init.headers,
-    },
-  };
-  let response = await fetch(getApiUrl(path), requestInit);
-
-  if (response.status === 401) {
-    const refreshedAuthOptions = await getAuthOptions({ forceRefresh: true });
-    response = await fetch(getApiUrl(path), {
-      ...requestInit,
-      headers: {
-        ...requestInit.headers,
-        ...refreshedAuthOptions.headers,
-      },
-    });
-  }
-
-  const text = await response.text();
-  const payload = text ? JSON.parse(text) : null;
-  if (!response.ok) {
-    throw new Error(payload?.error ?? payload?.message ?? "Request failed");
-  }
-  return payload as T;
-}
-
 export default function GroupDetailView() {
   const params = useParams<{ groupId: string }>();
   const router = useRouter();
@@ -297,11 +271,12 @@ export default function GroupDetailView() {
   }
 
   const loadChatMessages = useCallback(async () => {
-    const response = await apiFetch<ApiMessage[]>(
-      `/groups/${params.groupId}/chat/messages`,
+    const response = await getGroupsGroupIdChatMessages(
+      params.groupId,
+      await getAuthOptions(),
     ).catch(() => []);
 
-    return Array.isArray(response) ? response : [];
+    return Array.isArray(response) ? (response as ApiMessage[]) : [];
   }, [params.groupId]);
 
   const loadMatches = useCallback(async () => {
@@ -318,14 +293,14 @@ export default function GroupDetailView() {
     const [groupResponse, memberResponse, familyResponse, matchResponse, messageResponse] =
       await Promise.all([
         getGroupsGroupId(params.groupId, options),
-        apiFetch<ApiMember[]>(`/groups/${params.groupId}/members`),
+        getGroupsGroupIdMembers(params.groupId, options),
         getGroupsGroupIdFamilies(params.groupId, options).catch(() => []),
         loadMatches(),
         loadChatMessages(),
       ]);
 
     setGroup(groupResponse as ApiGroup);
-    setMembers(Array.isArray(memberResponse) ? memberResponse : []);
+    setMembers(Array.isArray(memberResponse) ? (memberResponse as unknown as ApiMember[]) : []);
     setFamilies(Array.isArray(familyResponse) ? familyResponse : []);
     setMatches(Array.isArray(matchResponse) ? matchResponse : []);
     setChatMessages(Array.isArray(messageResponse) ? messageResponse : []);
@@ -360,7 +335,7 @@ export default function GroupDetailView() {
   useEffect(() => {
     if (!activeGroupId) return;
 
-    const socket = new WebSocket(getWebSocketUrl(`/groups/${activeGroupId}/chat/ws`));
+    const socket = new WebSocket(getGroupChatWebSocketUrl(activeGroupId));
 
     socketRef.current = socket;
     socket.onopen = () => setSocketStatus("open");
@@ -513,8 +488,9 @@ export default function GroupDetailView() {
     async function loadJoinRequests() {
       await Promise.resolve();
       if (!group || group.adminId !== user?.id) return;
-      const requests = await apiFetch<ApiJoinRequest[]>(
-        `/groups/${group.id}/join-requests`,
+      const requests = await getGroupsGroupIdJoinRequests(
+        group.id,
+        await getAuthOptions(),
       ).catch(() => []);
       setJoinRequests(Array.isArray(requests) ? requests : []);
     }
@@ -687,9 +663,11 @@ export default function GroupDetailView() {
     setActiveRequestAction("accept");
     setActionMessage("");
     try {
-      await apiFetch(`/groups/${params.groupId}/join-requests/${requestId}/accept`, {
-        method: "POST",
-      });
+      await postGroupsGroupIdJoinRequestsRequestIdAccept(
+        params.groupId,
+        requestId,
+        await getAuthOptions({ forceRefresh: true }),
+      );
       setJoinRequests((requests) =>
         requests.filter((request) => request.id !== requestId),
       );
@@ -708,9 +686,11 @@ export default function GroupDetailView() {
     setActiveRequestAction("decline");
     setActionMessage("");
     try {
-      await apiFetch(`/groups/${params.groupId}/join-requests/${requestId}`, {
-        method: "DELETE",
-      });
+      await deleteGroupsGroupIdJoinRequestsRequestId(
+        params.groupId,
+        requestId,
+        await getAuthOptions({ forceRefresh: true }),
+      );
       setJoinRequests((requests) =>
         requests.filter((request) => request.id !== requestId),
       );
@@ -728,12 +708,15 @@ export default function GroupDetailView() {
     if (!group || !text) return;
 
     try {
-      const createdMessage = await apiFetch<ApiMessage>(
-        `/groups/${group.id}/chat/messages`,
-        { method: "POST", body: JSON.stringify({ content: text }) },
+      const createdMessage = await postGroupsGroupIdChatMessages(
+        group.id,
+        { content: text },
+        await getAuthOptions({ forceRefresh: true }),
       );
 
-      setChatMessages((messages) => mergeChatMessages(messages, [createdMessage]));
+      setChatMessages((messages) =>
+        mergeChatMessages(messages, [createdMessage as ApiMessage]),
+      );
 
       if (socketRef.current?.readyState === WebSocket.OPEN) {
         socketRef.current.send(

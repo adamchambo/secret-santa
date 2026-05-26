@@ -68,6 +68,44 @@ groupRouter.use(requireAuth);
  *         eventDate:
  *           type: string
  *           format: date-time
+ *     CreateJoinRequest:
+ *       type: object
+ *       required: [inviteCode]
+ *       properties:
+ *         inviteCode:
+ *           type: string
+ *     JoinRequestUser:
+ *       type: object
+ *       required: [email]
+ *       properties:
+ *         displayName:
+ *           type: string
+ *         email:
+ *           type: string
+ *           format: email
+ *     JoinRequest:
+ *       type: object
+ *       required: [id, user, requestedAt]
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: uuid
+ *         user:
+ *           $ref: '#/components/schemas/JoinRequestUser'
+ *         requestedAt:
+ *           type: string
+ *           format: date-time
+ *     JoinRequestResult:
+ *       type: object
+ *       required: [status, group]
+ *       properties:
+ *         status:
+ *           type: string
+ *           enum: [requested, already-member]
+ *         group:
+ *           $ref: '#/components/schemas/Group'
+ *         request:
+ *           $ref: '#/components/schemas/JoinRequest'
  *     Group:
  *       type: object
  *       required: [id, name, adminId, isLocked, createdAt, inviteCode]
@@ -226,6 +264,38 @@ groupRouter.use(requireAuth);
  *         description: Missing or invalid auth token
  */
 groupRouter.get("/", getGroups); // use query param
+/**
+ * @openapi
+ * /groups/join-requests:
+ *   post:
+ *     tags: [Join Requests]
+ *     summary: Request to join a group by invite code
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateJoinRequest'
+ *     responses:
+ *       201:
+ *         description: Join request created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/JoinRequestResult'
+ *       200:
+ *         description: Authenticated user is already a group member
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/JoinRequestResult'
+ *       400:
+ *         description: Missing invite code
+ *       404:
+ *         description: Invite code did not match a group
+ */
 groupRouter.post("/join-requests", createJoinRequest);
 /**
  * @openapi
@@ -332,8 +402,93 @@ groupRouter.put("/:groupId", requireGroupAdmin, updateGroup);
  *         description: Authenticated user is not the group admin
  */
 groupRouter.delete("/:groupId", requireGroupAdmin, deleteGroup);
+/**
+ * @openapi
+ * /groups/{groupId}/join-requests:
+ *   get:
+ *     tags: [Join Requests]
+ *     summary: List pending join requests for a group
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Pending join requests found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/JoinRequest'
+ *       403:
+ *         description: Authenticated user is not the group admin
+ */
 groupRouter.get("/:groupId/join-requests", requireGroupAdmin, getJoinRequests);
+/**
+ * @openapi
+ * /groups/{groupId}/join-requests/{requestId}/accept:
+ *   post:
+ *     tags: [Join Requests]
+ *     summary: Accept a pending join request
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: path
+ *         name: requestId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       201:
+ *         description: Join request accepted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GroupMember'
+ *       403:
+ *         description: Authenticated user is not the group admin
+ */
 groupRouter.post("/:groupId/join-requests/:requestId/accept", requireGroupAdmin, acceptJoinRequest);
+/**
+ * @openapi
+ * /groups/{groupId}/join-requests/{requestId}:
+ *   delete:
+ *     tags: [Join Requests]
+ *     summary: Decline a pending join request
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: path
+ *         name: requestId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       204:
+ *         description: Join request declined
+ *       403:
+ *         description: Authenticated user is not the group admin
+ */
 groupRouter.delete("/:groupId/join-requests/:requestId", requireGroupAdmin, declineJoinRequest);
 
 /* ---------------- CHILD ROUTERS ---------------- */

@@ -5,6 +5,8 @@
  * API documentation for the Secret Santa application
  * OpenAPI spec version: 1.0.0
  */
+import { API_BASE_URL } from "../base-url";
+
 export interface CreateGroup {
   name: string;
   eventDate?: string;
@@ -13,6 +15,35 @@ export interface CreateGroup {
 export interface UpdateGroup {
   name?: string;
   eventDate?: string;
+}
+
+export interface CreateJoinRequest {
+  inviteCode: string;
+}
+
+export interface JoinRequestUser {
+  displayName?: string;
+  email: string;
+}
+
+export interface JoinRequest {
+  id: string;
+  user: JoinRequestUser;
+  requestedAt: string;
+}
+
+export type JoinRequestResultStatus = typeof JoinRequestResultStatus[keyof typeof JoinRequestResultStatus];
+
+
+export const JoinRequestResultStatus = {
+  requested: 'requested',
+  alreadyMember: 'already-member',
+} as const;
+
+export interface JoinRequestResult {
+  status: JoinRequestResultStatus;
+  group: Group;
+  request?: JoinRequest;
 }
 
 export interface Group {
@@ -218,7 +249,7 @@ export const getGetGroupsUrl = () => {
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/groups`
+  return `${API_BASE_URL}/groups`
 }
 
 /**
@@ -249,7 +280,7 @@ export const getPostGroupsUrl = () => {
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/groups`
+  return `${API_BASE_URL}/groups`
 }
 
 /**
@@ -281,7 +312,7 @@ export const getGetGroupsGroupIdUrl = (groupId: string,) => {
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}`
+  return `${API_BASE_URL}/groups/${groupId}`
 }
 
 /**
@@ -312,7 +343,7 @@ export const getPutGroupsGroupIdUrl = (groupId: string,) => {
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}`
+  return `${API_BASE_URL}/groups/${groupId}`
 }
 
 /**
@@ -345,7 +376,7 @@ export const getDeleteGroupsGroupIdUrl = (groupId: string,) => {
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}`
+  return `${API_BASE_URL}/groups/${groupId}`
 }
 
 /**
@@ -371,12 +402,141 @@ export const deleteGroupsGroupId = async (groupId: string, options?: RequestInit
 
 
 
+export const getPostGroupsJoinRequestsUrl = () => {
+
+
+
+
+  return `${API_BASE_URL}/groups/join-requests`
+}
+
+/**
+ * @summary Request to join a group by invite code
+ */
+export const postGroupsJoinRequests = async (createJoinRequest: CreateJoinRequest, options?: RequestInit): Promise<JoinRequestResult> => {
+
+  const res = await fetch(getPostGroupsJoinRequestsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createJoinRequest,)
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: JoinRequestResult = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+export const getGetGroupsGroupIdJoinRequestsUrl = (groupId: string,) => {
+
+
+
+
+  return `${API_BASE_URL}/groups/${groupId}/join-requests`
+}
+
+/**
+ * @summary List pending join requests for a group
+ */
+export const getGroupsGroupIdJoinRequests = async (groupId: string, options?: RequestInit): Promise<JoinRequest[]> => {
+
+  const res = await fetch(getGetGroupsGroupIdJoinRequestsUrl(groupId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: JoinRequest[] = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+export const getPostGroupsGroupIdJoinRequestsRequestIdAcceptUrl = (groupId: string,
+    requestId: string,) => {
+
+
+
+
+  return `${API_BASE_URL}/groups/${groupId}/join-requests/${requestId}/accept`
+}
+
+/**
+ * @summary Accept a pending join request
+ */
+export const postGroupsGroupIdJoinRequestsRequestIdAccept = async (groupId: string,
+    requestId: string, options?: RequestInit): Promise<GroupMember> => {
+
+  const res = await fetch(getPostGroupsGroupIdJoinRequestsRequestIdAcceptUrl(groupId,requestId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: GroupMember = body ? JSON.parse(body) : {}
+  return data
+}
+
+
+
+export const getDeleteGroupsGroupIdJoinRequestsRequestIdUrl = (groupId: string,
+    requestId: string,) => {
+
+
+
+
+  return `${API_BASE_URL}/groups/${groupId}/join-requests/${requestId}`
+}
+
+/**
+ * @summary Decline a pending join request
+ */
+export const deleteGroupsGroupIdJoinRequestsRequestId = async (groupId: string,
+    requestId: string, options?: RequestInit): Promise<void> => {
+
+  const res = await fetch(getDeleteGroupsGroupIdJoinRequestsRequestIdUrl(groupId,requestId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: void = body ? JSON.parse(body) : undefined
+  return data
+}
+
+
+
 export const getGetGroupsGroupIdMembersUrl = (groupId: string,) => {
 
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/members`
+  return `${API_BASE_URL}/groups/${groupId}/members`
 }
 
 /**
@@ -407,7 +567,7 @@ export const getPostGroupsGroupIdMembersUrl = (groupId: string,) => {
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/members`
+  return `${API_BASE_URL}/groups/${groupId}/members`
 }
 
 /**
@@ -441,7 +601,7 @@ export const getPutGroupsGroupIdMembersMemberIdUrl = (groupId: string,
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/members/${memberId}`
+  return `${API_BASE_URL}/groups/${groupId}/members/${memberId}`
 }
 
 /**
@@ -476,7 +636,7 @@ export const getDeleteGroupsGroupIdMembersMemberIdUrl = (groupId: string,
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/members/${memberId}`
+  return `${API_BASE_URL}/groups/${groupId}/members/${memberId}`
 }
 
 /**
@@ -508,7 +668,7 @@ export const getGetGroupsGroupIdFamiliesUrl = (groupId: string,) => {
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/families`
+  return `${API_BASE_URL}/groups/${groupId}/families`
 }
 
 /**
@@ -539,7 +699,7 @@ export const getPostGroupsGroupIdFamiliesUrl = (groupId: string,) => {
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/families`
+  return `${API_BASE_URL}/groups/${groupId}/families`
 }
 
 /**
@@ -573,7 +733,7 @@ export const getPutGroupsGroupIdFamiliesFamilyIdUrl = (groupId: string,
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/families/${familyId}`
+  return `${API_BASE_URL}/groups/${groupId}/families/${familyId}`
 }
 
 /**
@@ -608,7 +768,7 @@ export const getDeleteGroupsGroupIdFamiliesFamilyIdUrl = (groupId: string,
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/families/${familyId}`
+  return `${API_BASE_URL}/groups/${groupId}/families/${familyId}`
 }
 
 /**
@@ -640,7 +800,7 @@ export const getGetGroupsGroupIdMatchesUrl = (groupId: string,) => {
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/matches`
+  return `${API_BASE_URL}/groups/${groupId}/matches`
 }
 
 /**
@@ -671,7 +831,7 @@ export const getPostGroupsGroupIdMatchesUrl = (groupId: string,) => {
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/matches`
+  return `${API_BASE_URL}/groups/${groupId}/matches`
 }
 
 /**
@@ -703,7 +863,7 @@ export const getDeleteGroupsGroupIdMatchesMatchIdUrl = (groupId: string,
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/matches/${matchId}`
+  return `${API_BASE_URL}/groups/${groupId}/matches/${matchId}`
 }
 
 /**
@@ -735,7 +895,7 @@ export const getGetGroupsGroupIdChatMessagesUrl = (groupId: string,) => {
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/chat/messages`
+  return `${API_BASE_URL}/groups/${groupId}/chat/messages`
 }
 
 /**
@@ -766,7 +926,7 @@ export const getPostGroupsGroupIdChatMessagesUrl = (groupId: string,) => {
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/chat/messages`
+  return `${API_BASE_URL}/groups/${groupId}/chat/messages`
 }
 
 /**
@@ -800,7 +960,7 @@ export const getPutGroupsGroupIdChatMessagesMessageIdUrl = (groupId: string,
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/chat/messages/${messageId}`
+  return `${API_BASE_URL}/groups/${groupId}/chat/messages/${messageId}`
 }
 
 /**
@@ -835,7 +995,7 @@ export const getDeleteGroupsGroupIdChatMessagesMessageIdUrl = (groupId: string,
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/groups/${groupId}/chat/messages/${messageId}`
+  return `${API_BASE_URL}/groups/${groupId}/chat/messages/${messageId}`
 }
 
 /**
@@ -867,7 +1027,7 @@ export const getPostUsersUrl = () => {
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/users`
+  return `${API_BASE_URL}/users`
 }
 
 /**
@@ -899,7 +1059,7 @@ export const getGetUsersUserIdUrl = (userId: string,) => {
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}`
+  return `${API_BASE_URL}/users/${userId}`
 }
 
 /**
@@ -930,7 +1090,7 @@ export const getPutUsersUserIdUrl = (userId: string,) => {
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}`
+  return `${API_BASE_URL}/users/${userId}`
 }
 
 /**
@@ -963,7 +1123,7 @@ export const getDeleteUsersUserIdUrl = (userId: string,) => {
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}`
+  return `${API_BASE_URL}/users/${userId}`
 }
 
 /**
@@ -994,7 +1154,7 @@ export const getGetUsersUserIdGiftOptionsUrl = (userId: string,) => {
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}/gift-options`
+  return `${API_BASE_URL}/users/${userId}/gift-options`
 }
 
 /**
@@ -1025,7 +1185,7 @@ export const getPostUsersUserIdGiftOptionsUrl = (userId: string,) => {
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}/gift-options`
+  return `${API_BASE_URL}/users/${userId}/gift-options`
 }
 
 /**
@@ -1059,7 +1219,7 @@ export const getGetUsersUserIdGiftOptionsGiftOptionIdUrl = (userId: string,
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}/gift-options/${giftOptionId}`
+  return `${API_BASE_URL}/users/${userId}/gift-options/${giftOptionId}`
 }
 
 /**
@@ -1092,7 +1252,7 @@ export const getPutUsersUserIdGiftOptionsGiftOptionIdUrl = (userId: string,
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}/gift-options/${giftOptionId}`
+  return `${API_BASE_URL}/users/${userId}/gift-options/${giftOptionId}`
 }
 
 /**
@@ -1127,7 +1287,7 @@ export const getDeleteUsersUserIdGiftOptionsGiftOptionIdUrl = (userId: string,
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}/gift-options/${giftOptionId}`
+  return `${API_BASE_URL}/users/${userId}/gift-options/${giftOptionId}`
 }
 
 /**
@@ -1159,7 +1319,7 @@ export const getGetUsersUserIdPreferencesUrl = (userId: string,) => {
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}/preferences`
+  return `${API_BASE_URL}/users/${userId}/preferences`
 }
 
 /**
@@ -1190,7 +1350,7 @@ export const getPutUsersUserIdPreferencesUrl = (userId: string,) => {
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}/preferences`
+  return `${API_BASE_URL}/users/${userId}/preferences`
 }
 
 /**
@@ -1223,7 +1383,7 @@ export const getGetUsersUserIdSettingsUrl = (userId: string,) => {
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}/settings`
+  return `${API_BASE_URL}/users/${userId}/settings`
 }
 
 /**
@@ -1254,7 +1414,7 @@ export const getPutUsersUserIdSettingsUrl = (userId: string,) => {
 
 
 
-  return `https://api.secret-santa.adamchamberla.in/api/users/${userId}/settings`
+  return `${API_BASE_URL}/users/${userId}/settings`
 }
 
 /**
