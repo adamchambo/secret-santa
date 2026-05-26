@@ -20,3 +20,7 @@ export function getWebSocketUrl(path: string) {
 export function getGroupChatWebSocketUrl(groupId: string) {
   return getWebSocketUrl(`/groups/${encodeURIComponent(groupId)}/chat/ws`);
 }
+
+export function createGroupChatWebSocket(groupId: string) {
+  return new WebSocket(getGroupChatWebSocketUrl(groupId));
+}

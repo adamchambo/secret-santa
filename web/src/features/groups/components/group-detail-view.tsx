@@ -23,7 +23,7 @@ import {
 import AddFamilyModal, { FamilyModalParticipant } from "./add-family-modal";
 import { useAuth } from "@/src/features/auth/context/auth-provider";
 import { getAuthOptions } from "@/src/lib/api/auth-options";
-import { getGroupChatWebSocketUrl } from "@/src/lib/api/base-url";
+import { createGroupChatWebSocket } from "@/src/lib/api/base-url";
 import {
   deleteGroupsGroupId,
   deleteGroupsGroupIdJoinRequestsRequestId,
@@ -335,7 +335,7 @@ export default function GroupDetailView() {
   useEffect(() => {
     if (!activeGroupId) return;
 
-    const socket = new WebSocket(getGroupChatWebSocketUrl(activeGroupId));
+    const socket = createGroupChatWebSocket(activeGroupId);
 
     socketRef.current = socket;
     socket.onopen = () => setSocketStatus("open");
